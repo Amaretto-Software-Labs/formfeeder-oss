@@ -165,7 +165,7 @@ jobs:
     - name: Build and push Docker image
       uses: docker/build-push-action@v5
       with:
-        context: ./FormFeeder.Api
+        context: .
         file: ./FormFeeder.Api/Dockerfile
         platforms: linux/amd64,linux/arm64
         push: true
@@ -173,3 +173,4 @@ jobs:
         labels: ${{ steps.meta.outputs.labels }}
         cache-from: type=gha
         cache-to: type=gha,mode=max
+        
