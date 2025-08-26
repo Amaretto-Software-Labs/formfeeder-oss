@@ -1,0 +1,27 @@
+### Create private form with JSON payload
+POST http://localhost:5283/v1/forms/from-email
+Content-Type: application/json
+
+{
+  "email": "test@example.com"
+}
+
+### Create private form with form data
+POST http://localhost:5283/v1/forms/from-email
+Content-Type: application/x-www-form-urlencoded
+
+email=formdata@example.com
+
+### Test validation with invalid email
+POST http://localhost:5283/v1/forms/from-email
+Content-Type: application/json
+
+{
+  "email": "invalid-email"
+}
+
+### Test with missing email
+POST http://localhost:5283/v1/forms/from-email
+Content-Type: application/json
+
+{}

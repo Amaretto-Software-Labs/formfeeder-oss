@@ -1,0 +1,22 @@
+#!/bin/sh
+. "$(dirname "$0")/_/husky.sh"
+
+echo "Running pre-commit checks..."
+
+# Format check
+echo "Checking code format..."
+dotnet format --verify-no-changes
+if [ $? -ne 0 ]; then
+    echo "❌ Code formatting issues detected. Run 'dotnet format' to fix."
+    exit 1
+fi
+
+# Build check
+echo "Building project..."
+dotnet build --no-restore
+if [ $? -ne 0 ]; then
+    echo "❌ Build failed. Please fix build errors."
+    exit 1
+fi
+
+echo "✅ Pre-commit checks passed!"

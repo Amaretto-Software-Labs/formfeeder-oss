@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background-color: #f5f5f5;
+            margin: 0;
+            padding: 0;
+        }
+        .container { 
+            max-width: 600px; 
+            margin: 20px auto; 
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px 20px;
+            text-align: center;
+        }
+        .header h2 {
+            margin: 0;
+            font-size: 24px;
+            font-weight: 600;
+        }
+        .content {
+            padding: 30px 20px;
+        }
+        .metadata { 
+            background-color: #f9f9f9; 
+            padding: 15px; 
+            margin: 20px 0;
+            border-radius: 6px;
+            border-left: 4px solid #667eea;
+        }
+        .metadata p {
+            margin: 8px 0;
+            font-size: 14px;
+        }
+        .metadata strong {
+            color: #555;
+            display: inline-block;
+            min-width: 100px;
+        }
+        h3 {
+            color: #555;
+            font-size: 18px;
+            margin-top: 30px;
+            margin-bottom: 15px;
+            border-bottom: 2px solid #f0f0f0;
+            padding-bottom: 8px;
+        }
+        table { 
+            width: 100%; 
+            border-collapse: collapse; 
+            margin: 20px 0;
+            font-size: 14px;
+        }
+        th, td { 
+            padding: 12px; 
+            text-align: left; 
+            border-bottom: 1px solid #e0e0e0;
+        }
+        th { 
+            background-color: #f8f8f8; 
+            font-weight: 600;
+            color: #555;
+            text-transform: uppercase;
+            font-size: 12px;
+            letter-spacing: 0.5px;
+        }
+        td:first-child {
+            font-weight: 500;
+            color: #666;
+        }
+        tr:hover {
+            background-color: #f9f9f9;
+        }
+        pre {
+            background: #f4f4f4; 
+            padding: 15px; 
+            overflow-x: auto;
+            border-radius: 6px;
+            font-size: 13px;
+            line-height: 1.4;
+            color: #666;
+            border: 1px solid #e0e0e0;
+        }
+        .footer {
+            background-color: #f8f8f8;
+            padding: 20px;
+            text-align: center;
+            font-size: 12px;
+            color: #999;
+            border-top: 1px solid #e0e0e0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h2>📝 New Form Submission</h2>
+            <p style="margin: 10px 0 0 0; opacity: 0.9; font-size: 16px;">{{var:formId}}</p>
+        </div>
+        
+        <div class="content">
+            <div class="metadata">
+                <p><strong>📅 Submitted:</strong> {{var:submittedAt}}</p>
+                <p><strong>🌐 IP Address:</strong> {{var:ipAddress}}</p>
+                <p><strong>💻 Browser:</strong> {{var:userAgent}}</p>
+                <p><strong>🔗 Referrer:</strong> {{var:referer}}</p>
+            </div>
+
+            <h3>Form Fields</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Field Name</th>
+                        <th>Value</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for key, value in var:formFields %}
+                    <tr>
+                        <td>{{key}}</td>
+                        <td>{{value}}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+
+            <h3>Raw JSON Data</h3>
+            <pre>{{var:formData}}</pre>
+        </div>
+        
+        <div class="footer">
+            <p>This is an automated message from FormFeeder</p>
+            <p>Powered by AuroraHQ.ai</p>
+        </div>
+    </div>
+</body>
+</html>

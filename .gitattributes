@@ -1,0 +1,97 @@
+# Set default behavior to automatically normalize line endings.
+* text=auto
+
+# Force batch scripts to always use CRLF line endings so that if a repo is accessed
+# in Windows via a file share from Linux, the scripts will work.
+*.{cmd,[cC][mM][dD]} text eol=crlf
+*.{bat,[bB][aA][tT]} text eol=crlf
+
+# Force bash scripts to always use LF line endings so that if a repo is accessed
+# in Unix via a file share from Windows, the scripts will work.
+*.sh text eol=lf
+
+# Archives
+*.7z binary
+*.gz binary
+*.tar binary
+*.tgz binary
+*.zip binary
+
+# Documents
+*.doc binary
+*.DOC binary
+*.docx binary
+*.DOCX binary
+*.dot binary
+*.DOT binary
+*.pdf binary
+*.PDF binary
+*.rtf binary
+*.RTF binary
+
+# Images
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.png binary
+*.svg text
+*.ico binary
+*.bmp binary
+
+# Fonts
+*.ttf binary
+*.eot binary
+*.otf binary
+*.woff binary
+*.woff2 binary
+
+# .NET specific
+*.sln text eol=crlf
+*.csproj text eol=crlf
+*.vbproj text eol=crlf
+*.fsproj text eol=crlf
+*.dbproj text eol=crlf
+*.vcxproj text eol=crlf
+*.vcxproj.filters text eol=crlf
+*.props text eol=crlf
+*.targets text eol=crlf
+*.cs text diff=csharp
+*.vb text
+*.fs text
+*.xaml text
+*.cshtml text
+*.razor text
+
+# Config files
+*.json text
+*.xml text
+*.yml text
+*.yaml text
+*.config text
+*.conf text
+*.ini text
+
+# Web files
+*.htm text
+*.html text
+*.css text
+*.scss text
+*.sass text
+*.less text
+*.js text
+*.jsx text
+*.ts text
+*.tsx text
+
+# SQL files
+*.sql text
+
+# Docker
+Dockerfile text
+*.dockerignore text
+
+# Git files
+.gitattributes text
+.gitignore text
+.gitconfig text
+.gitmodules text
