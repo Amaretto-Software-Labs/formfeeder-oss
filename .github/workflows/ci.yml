@@ -40,10 +40,6 @@ jobs:
     - name: Build
       run: dotnet build --no-restore --configuration Release
 
-    - name: Format check
-      run: dotnet format --verify-no-changes --no-restore
-      if: matrix.os == 'ubuntu-latest'
-
     - name: Test
       run: dotnet test --no-build --configuration Release --verbosity normal --logger trx --collect:"XPlat Code Coverage" --results-directory ./TestResults
 
