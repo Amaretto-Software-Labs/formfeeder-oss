@@ -1,6 +1,6 @@
 using FormFeeder.Api.Data;
+
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
 namespace FormFeeder.Api.Tests.Infrastructure;
@@ -13,7 +13,7 @@ public static class TestDbContextFactory
         var options = new DbContextOptionsBuilder<AppDbContext>()
             .UseInMemoryDatabase(databaseName ?? Guid.NewGuid().ToString())
             .ConfigureWarnings(w => w.Ignore(Microsoft.EntityFrameworkCore.Diagnostics.InMemoryEventId.TransactionIgnoredWarning))
-            .UseLoggerFactory(LoggerFactory.Create(builder => 
+            .UseLoggerFactory(LoggerFactory.Create(builder =>
                 builder.AddConsole().SetMinimumLevel(LogLevel.Debug)))
             .Options;
 

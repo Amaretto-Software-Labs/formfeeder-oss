@@ -1,5 +1,6 @@
 using FormFeeder.Api.Data;
 using FormFeeder.Api.Services;
+
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -15,10 +16,10 @@ public abstract class TestBase : IDisposable
     protected TestBase()
     {
         var services = new ServiceCollection();
-        
+
         // Add logging
         services.AddLogging(builder => builder.AddConsole().SetMinimumLevel(LogLevel.Debug));
-        
+
         // Add configuration
         var configuration = new ConfigurationBuilder()
             .AddInMemoryCollection(new Dictionary<string, string?>
@@ -28,19 +29,19 @@ public abstract class TestBase : IDisposable
                 ["RateLimiting:Global:WindowMinutes"] = "1",
                 ["RateLimiting:Global:QueueLimit"] = "10",
                 ["RateLimiting:PerForm:DefaultPermitLimit"] = "10",
-                ["RateLimiting:PerForm:DefaultWindowMinutes"] = "1"
+                ["RateLimiting:PerForm:DefaultWindowMinutes"] = "1",
             })
             .Build();
-        
+
         services.AddSingleton<IConfiguration>(configuration);
-        
+
         // Add DbContext using AddDbContext with proper in-memory configuration
         services.AddDbContext<AppDbContext>(options =>
         {
             options.UseInMemoryDatabase(Guid.NewGuid().ToString());
             options.ConfigureWarnings(w => w.Ignore(Microsoft.EntityFrameworkCore.Diagnostics.InMemoryEventId.TransactionIgnoredWarning));
         });
-        
+
         // Register core service interfaces with mocks by default
         services.AddScoped<IFormConfigurationService>(_ => CreateMock<IFormConfigurationService>().Object);
         services.AddScoped<IFormValidationService>(_ => CreateMock<IFormValidationService>().Object);
@@ -49,14 +50,14 @@ public abstract class TestBase : IDisposable
         services.AddScoped<IConnectorFactory>(_ => CreateMock<IConnectorFactory>().Object);
         services.AddScoped<IConnectorService>(_ => CreateMock<IConnectorService>().Object);
         services.AddSingleton<IBackgroundTaskQueue>(_ => CreateMock<IBackgroundTaskQueue>().Object);
-        
+
         // Add real implementations for services that tests typically want to test
         services.AddScoped<FormSubmissionService>();
-        
+
         ConfigureServices(services);
-        
+
         ServiceProvider = services.BuildServiceProvider();
-        
+
         // Get DbContext from service provider
         DbContext = ServiceProvider.GetRequiredService<AppDbContext>();
     }
@@ -66,13 +67,17 @@ public abstract class TestBase : IDisposable
         // Override in derived classes to add specific services or replace mocks with real implementations
     }
 
-    protected T GetService<T>() where T : notnull => ServiceProvider.GetRequiredService<T>();
-    
-    protected Mock<T> CreateMock<T>() where T : class => new Mock<T>();
-    
+    protected T GetService<T>()
+        where T : notnull
+        => ServiceProvider.GetRequiredService<T>();
+
+    protected Mock<T> CreateMock<T>()
+        where T : class
+        => new Mock<T>();
+
     protected void EnsureDatabaseCreated()
     {
-        try 
+        try
         {
             DbContext.Database.EnsureCreated();
         }
@@ -83,7 +88,7 @@ public abstract class TestBase : IDisposable
             var options = new DbContextOptionsBuilder<AppDbContext>()
                 .UseInMemoryDatabase(Guid.NewGuid().ToString())
                 .Options;
-            
+
             using var tempContext = new AppDbContext(options);
             tempContext.Database.EnsureCreated();
         }

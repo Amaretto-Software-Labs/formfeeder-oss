@@ -1,16 +1,17 @@
 using FormFeeder.Api.Models;
 using FormFeeder.Api.Services.Configuration;
+
 using Microsoft.Extensions.Options;
 
 namespace FormFeeder.Api.Services;
 
 public sealed class FormConfigurationSeedingService
 {
-    private readonly IConfiguration _configuration;
-    private readonly IFormConfigurationManagementService _managementService;
-    private readonly IFormConfigurationService _readOnlyService;
-    private readonly FormConfigurationProviderSettings _providerSettings;
-    private readonly ILogger<FormConfigurationSeedingService> _logger;
+    private readonly IConfiguration configuration;
+    private readonly IFormConfigurationManagementService managementService;
+    private readonly IFormConfigurationService readOnlyService;
+    private readonly FormConfigurationProviderSettings providerSettings;
+    private readonly ILogger<FormConfigurationSeedingService> logger;
 
     public FormConfigurationSeedingService(
         IConfiguration configuration,
@@ -19,33 +20,33 @@ public sealed class FormConfigurationSeedingService
         IOptions<FormConfigurationProviderSettings> providerSettings,
         ILogger<FormConfigurationSeedingService> logger)
     {
-        _configuration = configuration;
-        _managementService = managementService;
-        _readOnlyService = readOnlyService;
-        _providerSettings = providerSettings.Value;
-        _logger = logger;
+        this.configuration = configuration;
+        this.managementService = managementService;
+        this.readOnlyService = readOnlyService;
+        this.providerSettings = providerSettings.Value;
+        this.logger = logger;
     }
 
     public async Task SeedFromAppSettingsAsync()
     {
-        if (!_providerSettings.SeedFromAppSettings)
+        if (!providerSettings.SeedFromAppSettings)
         {
-            _logger.LogDebug("Seeding from appsettings is disabled");
+            logger.LogDebug("Seeding from appsettings is disabled");
             return;
         }
 
         try
         {
             // Load configurations from appsettings
-            var appSettingsConfigs = _configuration.GetSection("Forms").Get<List<FormConfiguration>>() ?? [];
-            
+            var appSettingsConfigs = configuration.GetSection("Forms").Get<List<FormConfiguration>>() ?? [];
+
             if (appSettingsConfigs.Count == 0)
             {
-                _logger.LogInformation("No form configurations found in appsettings to seed");
+                logger.LogInformation("No form configurations found in appsettings to seed");
                 return;
             }
 
-            var existingConfigs = (await _readOnlyService.GetAllFormConfigurationsAsync()).ToList();
+            var existingConfigs = (await readOnlyService.GetAllFormConfigurationsAsync()).ToList();
             var existingFormIds = existingConfigs.Select(c => c.FormId).ToHashSet(StringComparer.OrdinalIgnoreCase);
 
             var configsToSeed = new List<FormConfiguration>();
@@ -55,13 +56,13 @@ public sealed class FormConfigurationSeedingService
             {
                 if (existingFormIds.Contains(config.FormId))
                 {
-                    if (_providerSettings.OverwriteExistingOnSeed)
+                    if (providerSettings.OverwriteExistingOnSeed)
                     {
                         configsToUpdate.Add(config);
                     }
                     else
                     {
-                        _logger.LogDebug("Skipping existing form configuration: {FormId}", config.FormId);
+                        logger.LogDebug("Skipping existing form configuration: {FormId}", config.FormId);
                     }
                 }
                 else
@@ -75,12 +76,12 @@ public sealed class FormConfigurationSeedingService
             {
                 try
                 {
-                    await _managementService.CreateFormConfigurationAsync(config);
-                    _logger.LogInformation("Seeded form configuration: {FormId}", config.FormId);
+                    await managementService.CreateFormConfigurationAsync(config);
+                    logger.LogInformation("Seeded form configuration: {FormId}", config.FormId);
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogError(ex, "Failed to seed form configuration: {FormId}", config.FormId);
+                    logger.LogError(ex, "Failed to seed form configuration: {FormId}", config.FormId);
                 }
             }
 
@@ -89,16 +90,16 @@ public sealed class FormConfigurationSeedingService
             {
                 try
                 {
-                    await _managementService.UpdateFormConfigurationAsync(config);
-                    _logger.LogInformation("Updated existing form configuration during seeding: {FormId}", config.FormId);
+                    await managementService.UpdateFormConfigurationAsync(config);
+                    logger.LogInformation("Updated existing form configuration during seeding: {FormId}", config.FormId);
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogError(ex, "Failed to update form configuration during seeding: {FormId}", config.FormId);
+                    logger.LogError(ex, "Failed to update form configuration during seeding: {FormId}", config.FormId);
                 }
             }
 
-            _logger.LogInformation(
+            logger.LogInformation(
                 "Form configuration seeding completed. Created: {Created}, Updated: {Updated}, Skipped: {Skipped}",
                 configsToSeed.Count,
                 configsToUpdate.Count,
@@ -106,7 +107,7 @@ public sealed class FormConfigurationSeedingService
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error during form configuration seeding");
+            logger.LogError(ex, "Error during form configuration seeding");
             throw;
         }
     }

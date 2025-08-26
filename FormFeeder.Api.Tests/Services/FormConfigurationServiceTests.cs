@@ -1,6 +1,6 @@
-using FormFeeder.Api.Models;
 using FormFeeder.Api.Services;
 using FormFeeder.Api.Tests.Infrastructure;
+
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -20,16 +20,16 @@ public class FormConfigurationServiceTests : TestBase
             ["Forms:0:Enabled"] = "true",
             ["Forms:0:RateLimit:RequestsPerWindow"] = "5",
             ["Forms:0:RateLimit:WindowMinutes"] = "2",
-            
+
             ["Forms:1:FormId"] = "disabled-form",
             ["Forms:1:AllowedDomains:0"] = "disabled.com",
             ["Forms:1:Description"] = "Disabled form",
             ["Forms:1:Enabled"] = "false",
-            
+
             ["Forms:2:FormId"] = "wildcard-form",
             ["Forms:2:AllowedDomains:0"] = "*",
             ["Forms:2:Description"] = "Wildcard form",
-            ["Forms:2:Enabled"] = "true"
+            ["Forms:2:Enabled"] = "true",
         };
 
         var configuration = new ConfigurationBuilder()
@@ -365,7 +365,6 @@ public class FormConfigurationServiceTests : TestBase
             service.Should().NotBeNull();
         }
     }
-
 }
 
 public class FormConfigurationServiceWithEmptyConfigTests : TestBase

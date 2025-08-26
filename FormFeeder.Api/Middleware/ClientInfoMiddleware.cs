@@ -15,10 +15,10 @@ public sealed class ClientInfoMiddleware(
         var clientIp = context.Request.GetClientIpAddress();
         var userAgent = context.Request.Headers.UserAgent.ToString();
 
-        logger.LogInformation("Request: {Method} {Path} from {ClientIp} - UserAgent: {UserAgent}", 
+        logger.LogInformation(
+            "Request: {Method} {Path} from {ClientIp} - UserAgent: {UserAgent}",
             method, fullPath, clientIp, userAgent);
 
         await next(context).ConfigureAwait(false);
     }
-
 }

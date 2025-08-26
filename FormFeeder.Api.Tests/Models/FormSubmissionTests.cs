@@ -1,6 +1,7 @@
+using System.Text.Json;
+
 using FormFeeder.Api.Models;
 using FormFeeder.Api.Tests.Infrastructure;
-using System.Text.Json;
 
 namespace FormFeeder.Api.Tests.Models;
 
@@ -31,7 +32,7 @@ public class FormSubmissionTests
                 ClientIp = clientIp,
                 UserAgent = userAgent,
                 Referer = referer,
-                ContentType = contentType
+                ContentType = contentType,
             };
 
             // Assert
@@ -57,7 +58,7 @@ public class FormSubmissionTests
                 ClientIp = null,
                 UserAgent = null,
                 Referer = null,
-                ContentType = null
+                ContentType = null,
             };
 
             // Assert
@@ -75,7 +76,7 @@ public class FormSubmissionTests
             {
                 Id = Guid.NewGuid(),
                 FormId = "test",
-                FormData = JsonDocument.Parse("{}")
+                FormData = JsonDocument.Parse("{}"),
             };
 
             // Act & Assert
@@ -90,7 +91,7 @@ public class FormSubmissionTests
             {
                 Id = Guid.NewGuid(),
                 FormId = "test",
-                FormData = JsonDocument.Parse("{}")
+                FormData = JsonDocument.Parse("{}"),
             };
 
             // Act & Assert
@@ -116,15 +117,15 @@ public class FormSubmissionTests
                     "score": 95.5
                 }
                 """;
-            
+
             var jsonDocument = JsonDocument.Parse(complexJson);
-            
+
             // Act
             var submission = new FormSubmission
             {
                 Id = Guid.NewGuid(),
                 FormId = "complex-form",
-                FormData = jsonDocument
+                FormData = jsonDocument,
             };
 
             // Assert
@@ -146,7 +147,7 @@ public class FormSubmissionTests
             {
                 Id = Guid.NewGuid(),
                 FormId = "empty-form",
-                FormData = emptyJson
+                FormData = emptyJson,
             };
 
             // Assert
@@ -166,7 +167,7 @@ public class FormSubmissionTests
             {
                 Id = Guid.NewGuid(),
                 FormId = "array-form",
-                FormData = arrayJson
+                FormData = arrayJson,
             };
 
             // Assert
@@ -193,7 +194,7 @@ public class FormSubmissionTests
             {
                 Id = Guid.NewGuid(),
                 FormId = "special-form",
-                FormData = specialJson
+                FormData = specialJson,
             };
 
             // Assert
@@ -213,19 +214,19 @@ public class FormSubmissionTests
             // Arrange
             var id = Guid.NewGuid();
             var formData = JsonDocument.Parse("{\"test\": \"value\"}");
-            
+
             var submission1 = new FormSubmission
             {
                 Id = id,
                 FormId = "test",
-                FormData = formData
+                FormData = formData,
             };
-            
+
             var submission2 = new FormSubmission
             {
                 Id = id,
                 FormId = "test",
-                FormData = formData
+                FormData = formData,
             };
 
             // Assert
@@ -242,14 +243,14 @@ public class FormSubmissionTests
             {
                 Id = Guid.NewGuid(),
                 FormId = "test",
-                FormData = JsonDocument.Parse("{}")
+                FormData = JsonDocument.Parse("{}"),
             };
-            
+
             var submission2 = new FormSubmission
             {
                 Id = Guid.NewGuid(),
                 FormId = "test",
-                FormData = JsonDocument.Parse("{}")
+                FormData = JsonDocument.Parse("{}"),
             };
 
             // Assert
@@ -331,7 +332,7 @@ public class FormSubmissionTests
             submission.FormId.Should().Be(customFormId);
             submission.SubmittedAt.Should().Be(customDate);
             submission.ClientIp.Should().Be(customIp);
-            
+
             var formDataElement = submission.FormData.RootElement;
             formDataElement.GetProperty("custom").GetString().Should().Be("value");
         }

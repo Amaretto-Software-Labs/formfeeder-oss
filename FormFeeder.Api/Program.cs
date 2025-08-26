@@ -1,9 +1,10 @@
-using Microsoft.EntityFrameworkCore;
 using FormFeeder.Api.Data;
+using FormFeeder.Api.Endpoints;
+using FormFeeder.Api.Middleware;
 using FormFeeder.Api.Services;
 using FormFeeder.Api.Services.Extensions;
-using FormFeeder.Api.Middleware;
-using FormFeeder.Api.Endpoints;
+
+using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -11,11 +12,11 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddDbContext<AppDbContext>(options =>
 {
     var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
-    
+
     var dataSourceBuilder = new Npgsql.NpgsqlDataSourceBuilder(connectionString);
     dataSourceBuilder.EnableDynamicJson();
     var dataSource = dataSourceBuilder.Build();
-    
+
     options.UseNpgsql(dataSource);
 });
 
@@ -81,4 +82,6 @@ app.MapHealthEndpoints();
 app.Run();
 
 // Make Program accessible to integration tests
-public partial class Program { }
+public partial class Program
+{
+}

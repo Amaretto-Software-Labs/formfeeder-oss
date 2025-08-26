@@ -19,7 +19,7 @@ public sealed class FormIdGenerationService : IFormIdGenerationService
         rng.GetBytes(randomBytes);
 
         var result = new StringBuilder(Prefix, Prefix.Length + HashLength);
-        
+
         foreach (var b in randomBytes)
         {
             result.Append(CharSet[b % CharSet.Length]);

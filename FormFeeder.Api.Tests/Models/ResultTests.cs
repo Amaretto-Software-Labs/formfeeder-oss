@@ -146,7 +146,7 @@ public class ResultTests
             {
                 IsSuccess = true,
                 Value = null,
-                Error = null
+                Error = null,
             };
 
             // Act
@@ -275,7 +275,7 @@ public class ResultTests
             {
                 IsSuccess = false,
                 Value = null,
-                Error = null
+                Error = null,
             };
 
             // Act

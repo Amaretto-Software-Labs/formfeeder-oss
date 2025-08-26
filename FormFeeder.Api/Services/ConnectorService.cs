@@ -21,7 +21,7 @@ public sealed class ConnectorService(
         }
 
         var enabledConnectors = connectorConfigs.Where(c => c.Enabled).ToList();
-        
+
         if (!enabledConnectors.Any())
         {
             logger.LogDebug("No connectors configured for form {FormId}", submission.FormId);
@@ -29,7 +29,7 @@ public sealed class ConnectorService(
         }
 
         List<Task> tasks = [];
-        
+
         foreach (var config in enabledConnectors)
         {
             tasks.Add(ExecuteConnectorAsync(submission, config));
@@ -42,7 +42,8 @@ public sealed class ConnectorService(
     {
         try
         {
-            logger.LogInformation("Executing {ConnectorType} connector '{ConnectorName}' for form {FormId}", 
+            logger.LogInformation(
+                "Executing {ConnectorType} connector '{ConnectorName}' for form {FormId}",
                 config.Type, config.Name, submission.FormId);
 
             if (!connectorFactory.IsConnectorTypeSupported(config.Type))
@@ -59,19 +60,21 @@ public sealed class ConnectorService(
             }
 
             connector.Enabled = config.Enabled;
-            
+
             var result = await connector.ExecuteAsync(submission, config.Settings).ConfigureAwait(false);
-            
+
             if (result.Success)
             {
-                logger.LogInformation("Connector {ConnectorName} executed successfully: {Message}", 
+                logger.LogInformation(
+                    "Connector {ConnectorName} executed successfully: {Message}",
                     config.Name, result.Message);
             }
             else
             {
-                logger.LogWarning("Connector {ConnectorName} failed: {Message}", 
+                logger.LogWarning(
+                    "Connector {ConnectorName} failed: {Message}",
                     config.Name, result.Message);
-                
+
                 if (result.Error is not null)
                 {
                     logger.LogError(result.Error, "Connector {ConnectorName} error details", config.Name);
@@ -80,7 +83,7 @@ public sealed class ConnectorService(
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "Unexpected error executing connector {ConnectorName} for form {FormId}", 
+            logger.LogError(ex, "Unexpected error executing connector {ConnectorName} for form {FormId}",
                 config.Name, submission.FormId);
         }
     }

@@ -5,6 +5,7 @@ namespace FormFeeder.Api.Services;
 public interface IConnectorFactory
 {
     IConnector? CreateConnector(string connectorType, string name);
+
     bool IsConnectorTypeSupported(string connectorType);
 }
 
@@ -13,7 +14,7 @@ public sealed class ConnectorFactory(IServiceScopeFactory serviceScopeFactory, I
     private static readonly Dictionary<string, Type> ConnectorTypes = new(StringComparer.OrdinalIgnoreCase)
     {
         { "MailJet", typeof(MailJetConnector) },
-        { "Slack", typeof(SlackConnector) }
+        { "Slack", typeof(SlackConnector) },
     };
 
     public IConnector? CreateConnector(string connectorType, string name)
@@ -28,10 +29,10 @@ public sealed class ConnectorFactory(IServiceScopeFactory serviceScopeFactory, I
         {
             using var scope = serviceScopeFactory.CreateScope();
             var serviceProvider = scope.ServiceProvider;
-            
+
             var loggerType = typeof(ILogger<>).MakeGenericType(type);
             var connectorLogger = serviceProvider.GetService(loggerType);
-            
+
             // Handle different connector types with different constructor signatures
             if (type == typeof(SlackConnector))
             {
@@ -43,6 +44,7 @@ public sealed class ConnectorFactory(IServiceScopeFactory serviceScopeFactory, I
                     logger.LogError("No suitable constructor found for Slack connector");
                     return null;
                 }
+
                 return constructor.Invoke([connectorLogger, httpClientFactory, retryPolicyFactory, name]) as IConnector;
             }
             else if (type == typeof(MailJetConnector))
@@ -56,6 +58,7 @@ public sealed class ConnectorFactory(IServiceScopeFactory serviceScopeFactory, I
                     logger.LogError("No suitable constructor found for MailJet connector");
                     return null;
                 }
+
                 return constructor.Invoke([connectorLogger, configuration, emailTemplateService, retryPolicyFactory, name]) as IConnector;
             }
             else
@@ -71,6 +74,6 @@ public sealed class ConnectorFactory(IServiceScopeFactory serviceScopeFactory, I
         }
     }
 
-    public bool IsConnectorTypeSupported(string connectorType) => 
+    public bool IsConnectorTypeSupported(string connectorType) =>
         !string.IsNullOrWhiteSpace(connectorType) && ConnectorTypes.ContainsKey(connectorType);
 }

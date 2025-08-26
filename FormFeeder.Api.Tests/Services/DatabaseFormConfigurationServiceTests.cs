@@ -3,9 +3,9 @@ using FormFeeder.Api.Models;
 using FormFeeder.Api.Models.Entities;
 using FormFeeder.Api.Services;
 using FormFeeder.Api.Tests.Infrastructure;
+
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
 
 namespace FormFeeder.Api.Tests.Services;
 
@@ -29,12 +29,12 @@ public class DatabaseFormConfigurationServiceTests : TestBase
             AllowedDomains = new List<AllowedDomainEntity>
             {
                 new() { Domain = "example.com" },
-                new() { Domain = "test.com" }
+                new() { Domain = "test.com" },
             },
             RateLimit = new RateLimitSettingsEntity
             {
                 RequestsPerWindow = 10,
-                WindowMinutes = 1
+                WindowMinutes = 1,
             },
             Connectors = new List<ConnectorConfigurationEntity>
             {
@@ -45,12 +45,12 @@ public class DatabaseFormConfigurationServiceTests : TestBase
                     Enabled = true,
                     SettingsJson = """{"apiKey":"test","apiSecret":"secret"}"""
                 }
-            }
+            },
         };
 
         DbContext.FormConfigurations.Add(entity);
         await DbContext.SaveChangesAsync();
-        
+
         return entity;
     }
 
@@ -144,10 +144,10 @@ public class DatabaseFormConfigurationServiceTests : TestBase
             // Arrange
             EnsureDatabaseCreated();
             var service = GetService<DatabaseFormConfigurationService>();
-            
+
             // Create multiple test configurations
             await CreateTestFormConfigurationEntityAsync();
-            
+
             var secondEntity = new FormConfigurationEntity
             {
                 FormId = "second-form",
@@ -155,7 +155,7 @@ public class DatabaseFormConfigurationServiceTests : TestBase
                 Enabled = false,
                 CreatedAt = DateTime.UtcNow,
                 UpdatedAt = DateTime.UtcNow,
-                AllowedDomains = new List<AllowedDomainEntity> { new() { Domain = "*" } }
+                AllowedDomains = new List<AllowedDomainEntity> { new() { Domain = "*" } },
             };
             DbContext.FormConfigurations.Add(secondEntity);
             await DbContext.SaveChangesAsync();
@@ -208,13 +208,13 @@ public class DatabaseFormConfigurationServiceTests : TestBase
             // Arrange
             EnsureDatabaseCreated();
             var service = GetService<DatabaseFormConfigurationService>();
-            
+
             var entity = new FormConfigurationEntity
             {
                 FormId = "disabled-form",
                 Enabled = false,
                 CreatedAt = DateTime.UtcNow,
-                UpdatedAt = DateTime.UtcNow
+                UpdatedAt = DateTime.UtcNow,
             };
             DbContext.FormConfigurations.Add(entity);
             await DbContext.SaveChangesAsync();
@@ -283,14 +283,14 @@ public class DatabaseFormConfigurationServiceTests : TestBase
             // Arrange
             EnsureDatabaseCreated();
             var service = GetService<DatabaseFormConfigurationService>();
-            
+
             var entity = new FormConfigurationEntity
             {
                 FormId = "wildcard-form",
                 Enabled = true,
                 CreatedAt = DateTime.UtcNow,
                 UpdatedAt = DateTime.UtcNow,
-                AllowedDomains = new List<AllowedDomainEntity> { new() { Domain = "*" } }
+                AllowedDomains = new List<AllowedDomainEntity> { new() { Domain = "*" } },
             };
             DbContext.FormConfigurations.Add(entity);
             await DbContext.SaveChangesAsync();
@@ -323,14 +323,14 @@ public class DatabaseFormConfigurationServiceTests : TestBase
             // Arrange
             EnsureDatabaseCreated();
             var service = GetService<DatabaseFormConfigurationService>();
-            
+
             var entity = new FormConfigurationEntity
             {
                 FormId = "disabled-form",
                 Enabled = false,
                 CreatedAt = DateTime.UtcNow,
                 UpdatedAt = DateTime.UtcNow,
-                AllowedDomains = new List<AllowedDomainEntity> { new() { Domain = "allowed.com" } }
+                AllowedDomains = new List<AllowedDomainEntity> { new() { Domain = "allowed.com" } },
             };
             DbContext.FormConfigurations.Add(entity);
             await DbContext.SaveChangesAsync();
@@ -404,10 +404,10 @@ public class DatabaseFormConfigurationServiceTests : TestBase
             // Arrange
             EnsureDatabaseCreated();
             var service = GetService<DatabaseFormConfigurationService>();
-            
+
             // Create enabled form
             await CreateTestFormConfigurationEntityAsync();
-            
+
             // Create disabled form
             var disabledEntity = new FormConfigurationEntity
             {
@@ -415,10 +415,10 @@ public class DatabaseFormConfigurationServiceTests : TestBase
                 Enabled = false,
                 CreatedAt = DateTime.UtcNow,
                 UpdatedAt = DateTime.UtcNow,
-                AllowedDomains = new List<AllowedDomainEntity> { new() { Domain = "disabled.com" } }
+                AllowedDomains = new List<AllowedDomainEntity> { new() { Domain = "disabled.com" } },
             };
             DbContext.FormConfigurations.Add(disabledEntity);
-            
+
             // Create form with wildcard domain
             var wildcardEntity = new FormConfigurationEntity
             {
@@ -426,10 +426,10 @@ public class DatabaseFormConfigurationServiceTests : TestBase
                 Enabled = true,
                 CreatedAt = DateTime.UtcNow,
                 UpdatedAt = DateTime.UtcNow,
-                AllowedDomains = new List<AllowedDomainEntity> { new() { Domain = "*" } }
+                AllowedDomains = new List<AllowedDomainEntity> { new() { Domain = "*" } },
             };
             DbContext.FormConfigurations.Add(wildcardEntity);
-            
+
             await DbContext.SaveChangesAsync();
 
             // Act
@@ -448,33 +448,33 @@ public class DatabaseFormConfigurationServiceTests : TestBase
             // Arrange
             EnsureDatabaseCreated();
             var service = GetService<DatabaseFormConfigurationService>();
-            
+
             var entity1 = new FormConfigurationEntity
             {
                 FormId = "form1",
                 Enabled = true,
                 CreatedAt = DateTime.UtcNow,
                 UpdatedAt = DateTime.UtcNow,
-                AllowedDomains = new List<AllowedDomainEntity> 
-                { 
+                AllowedDomains = new List<AllowedDomainEntity>
+                {
                     new() { Domain = "duplicate.com" },
                     new() { Domain = "unique1.com" }
-                }
+                },
             };
-            
+
             var entity2 = new FormConfigurationEntity
             {
                 FormId = "form2",
                 Enabled = true,
                 CreatedAt = DateTime.UtcNow,
                 UpdatedAt = DateTime.UtcNow,
-                AllowedDomains = new List<AllowedDomainEntity> 
-                { 
+                AllowedDomains = new List<AllowedDomainEntity>
+                {
                     new() { Domain = "duplicate.com" },
                     new() { Domain = "unique2.com" }
-                }
+                },
             };
-            
+
             DbContext.FormConfigurations.AddRange(entity1, entity2);
             await DbContext.SaveChangesAsync();
 
@@ -495,14 +495,14 @@ public class DatabaseFormConfigurationServiceTests : TestBase
             // Arrange
             EnsureDatabaseCreated();
             var service = GetService<DatabaseFormConfigurationService>();
-            
+
             var entity = new FormConfigurationEntity
             {
                 FormId = "test-form",
                 Enabled = true,
                 CreatedAt = DateTime.UtcNow,
                 UpdatedAt = DateTime.UtcNow,
-                AllowedDomains = new List<AllowedDomainEntity> { new() { Domain = "Example.COM" } }
+                AllowedDomains = new List<AllowedDomainEntity> { new() { Domain = "Example.COM" } },
             };
             DbContext.FormConfigurations.Add(entity);
             await DbContext.SaveChangesAsync();
@@ -524,7 +524,7 @@ public class DatabaseFormConfigurationServiceTests : TestBase
             // Arrange
             EnsureDatabaseCreated();
             var service = GetService<DatabaseFormConfigurationService>();
-            
+
             var config = new FormConfiguration
             {
                 FormId = "new-form",
@@ -535,7 +535,7 @@ public class DatabaseFormConfigurationServiceTests : TestBase
                 Connectors = new List<ConnectorConfiguration>
                 {
                     new("Slack", "NewConnector", true, new Dictionary<string, object> { ["webhook"] = "test-url" })
-                }
+                },
             };
 
             // Act
@@ -544,14 +544,14 @@ public class DatabaseFormConfigurationServiceTests : TestBase
             // Assert
             result.Should().NotBeNull();
             result.FormId.Should().Be("new-form");
-            
+
             // Verify it was saved to database
             var saved = await DbContext.FormConfigurations
                 .Include(f => f.AllowedDomains)
                 .Include(f => f.RateLimit)
                 .Include(f => f.Connectors)
                 .FirstAsync(f => f.FormId == "new-form");
-                
+
             saved.Should().NotBeNull();
             saved.AllowedDomains.Should().HaveCount(2);
             saved.RateLimit.Should().NotBeNull();
@@ -588,7 +588,7 @@ public class DatabaseFormConfigurationServiceTests : TestBase
                 Enabled = false,
                 PrivacyMode = true,
                 AllowedDomains = new List<string> { "updated.com" },
-                RateLimit = new RateLimitSettings { RequestsPerWindow = 20, WindowMinutes = 5 }
+                RateLimit = new RateLimitSettings { RequestsPerWindow = 20, WindowMinutes = 5 },
             };
 
             // Act
@@ -612,11 +612,11 @@ public class DatabaseFormConfigurationServiceTests : TestBase
             // Arrange
             EnsureDatabaseCreated();
             var service = GetService<DatabaseFormConfigurationService>();
-            
+
             var config = new FormConfiguration
             {
                 FormId = "non-existent",
-                Description = "Test"
+                Description = "Test",
             };
 
             // Act
@@ -654,7 +654,7 @@ public class DatabaseFormConfigurationServiceTests : TestBase
 
             // Assert
             result.Should().BeTrue();
-            
+
             // Verify it was deleted from database
             var exists = await DbContext.FormConfigurations.AnyAsync(f => f.FormId == "test-form");
             exists.Should().BeFalse();

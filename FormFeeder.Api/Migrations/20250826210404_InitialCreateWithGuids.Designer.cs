@@ -12,8 +12,8 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace FormFeeder.Api.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20250825231606_AddFormConfigurations")]
-    partial class AddFormConfigurations
+    [Migration("20250826210404_InitialCreateWithGuids")]
+    partial class InitialCreateWithGuids
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -27,19 +27,17 @@ namespace FormFeeder.Api.Migrations
 
             modelBuilder.Entity("FormFeeder.Api.Models.Entities.AllowedDomainEntity", b =>
                 {
-                    b.Property<int>("Id")
+                    b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+                        .HasColumnType("uuid");
 
                     b.Property<string>("Domain")
                         .IsRequired()
                         .HasMaxLength(255)
                         .HasColumnType("character varying(255)");
 
-                    b.Property<int>("FormConfigurationId")
-                        .HasColumnType("integer");
+                    b.Property<Guid>("FormConfigurationId")
+                        .HasColumnType("uuid");
 
                     b.HasKey("Id");
 
@@ -53,17 +51,15 @@ namespace FormFeeder.Api.Migrations
 
             modelBuilder.Entity("FormFeeder.Api.Models.Entities.ConnectorConfigurationEntity", b =>
                 {
-                    b.Property<int>("Id")
+                    b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+                        .HasColumnType("uuid");
 
                     b.Property<bool>("Enabled")
                         .HasColumnType("boolean");
 
-                    b.Property<int>("FormConfigurationId")
-                        .HasColumnType("integer");
+                    b.Property<Guid>("FormConfigurationId")
+                        .HasColumnType("uuid");
 
                     b.Property<string>("Name")
                         .IsRequired()
@@ -92,11 +88,9 @@ namespace FormFeeder.Api.Migrations
 
             modelBuilder.Entity("FormFeeder.Api.Models.Entities.FormConfigurationEntity", b =>
                 {
-                    b.Property<int>("Id")
+                    b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+                        .HasColumnType("uuid");
 
                     b.Property<DateTime>("CreatedAt")
                         .ValueGeneratedOnAdd()
@@ -133,14 +127,12 @@ namespace FormFeeder.Api.Migrations
 
             modelBuilder.Entity("FormFeeder.Api.Models.Entities.RateLimitSettingsEntity", b =>
                 {
-                    b.Property<int>("Id")
+                    b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
+                        .HasColumnType("uuid");
 
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
-
-                    b.Property<int>("FormConfigurationId")
-                        .HasColumnType("integer");
+                    b.Property<Guid>("FormConfigurationId")
+                        .HasColumnType("uuid");
 
                     b.Property<int>("RequestsPerWindow")
                         .ValueGeneratedOnAdd()

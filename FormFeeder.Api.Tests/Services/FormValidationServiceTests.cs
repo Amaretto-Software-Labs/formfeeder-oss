@@ -1,24 +1,23 @@
 using FormFeeder.Api.Models;
 using FormFeeder.Api.Services;
 using FormFeeder.Api.Tests.Infrastructure;
+
 using Microsoft.AspNetCore.Http;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Primitives;
 
 namespace FormFeeder.Api.Tests.Services;
 
 public class FormValidationServiceTests : TestBase
 {
-    private readonly FormValidationService _service;
-    private readonly Mock<IFormConfigurationService> _formConfigServiceMock;
-    private readonly Mock<ILogger<FormValidationService>> _loggerMock;
+    private readonly FormValidationService service;
+    private readonly Mock<IFormConfigurationService> formConfigServiceMock;
+    private readonly Mock<ILogger<FormValidationService>> loggerMock;
 
     public FormValidationServiceTests()
     {
-        _formConfigServiceMock = CreateMock<IFormConfigurationService>();
-        _loggerMock = CreateMock<ILogger<FormValidationService>>();
-        _service = new FormValidationService(_formConfigServiceMock.Object, _loggerMock.Object);
+        formConfigServiceMock = CreateMock<IFormConfigurationService>();
+        loggerMock = CreateMock<ILogger<FormValidationService>>();
+        service = new FormValidationService(formConfigServiceMock.Object, loggerMock.Object);
     }
 
     public class ValidateFormAndOriginAsync : FormValidationServiceTests
@@ -29,12 +28,12 @@ public class FormValidationServiceTests : TestBase
             // Arrange
             const string formId = "non-existent-form";
             var httpContext = new DefaultHttpContext();
-            
-            _formConfigServiceMock.Setup(x => x.GetFormConfigurationAsync(formId))
+
+            formConfigServiceMock.Setup(x => x.GetFormConfigurationAsync(formId))
                                   .ReturnsAsync((FormConfiguration?)null);
 
             // Act
-            var result = await _service.ValidateFormAndOriginAsync(formId, httpContext.Request);
+            var result = await service.ValidateFormAndOriginAsync(formId, httpContext.Request);
 
             // Assert
             result.IsSuccess.Should().BeFalse();
@@ -48,12 +47,12 @@ public class FormValidationServiceTests : TestBase
             const string formId = "disabled-form";
             var httpContext = new DefaultHttpContext();
             var disabledForm = TestDataBuilder.CreateFormConfiguration(formId, enabled: false);
-            
-            _formConfigServiceMock.Setup(x => x.GetFormConfigurationAsync(formId))
+
+            formConfigServiceMock.Setup(x => x.GetFormConfigurationAsync(formId))
                                   .ReturnsAsync(disabledForm);
 
             // Act
-            var result = await _service.ValidateFormAndOriginAsync(formId, httpContext.Request);
+            var result = await service.ValidateFormAndOriginAsync(formId, httpContext.Request);
 
             // Assert
             result.IsSuccess.Should().BeFalse();
@@ -68,16 +67,16 @@ public class FormValidationServiceTests : TestBase
             const string origin = "https://example.com";
             var httpContext = new DefaultHttpContext();
             httpContext.Request.Headers["Origin"] = origin;
-            
+
             var formConfig = TestDataBuilder.CreateFormConfiguration(formId, ["example.com"]);
-            
-            _formConfigServiceMock.Setup(x => x.GetFormConfigurationAsync(formId))
+
+            formConfigServiceMock.Setup(x => x.GetFormConfigurationAsync(formId))
                                   .ReturnsAsync(formConfig);
-            _formConfigServiceMock.Setup(x => x.IsDomainAllowedForFormAsync(formId, origin))
+            formConfigServiceMock.Setup(x => x.IsDomainAllowedForFormAsync(formId, origin))
                                   .ReturnsAsync(true);
 
             // Act
-            var result = await _service.ValidateFormAndOriginAsync(formId, httpContext.Request);
+            var result = await service.ValidateFormAndOriginAsync(formId, httpContext.Request);
 
             // Assert
             result.IsSuccess.Should().BeTrue();
@@ -91,14 +90,14 @@ public class FormValidationServiceTests : TestBase
             const string formId = "wildcard-form";
             var httpContext = new DefaultHttpContext();
             httpContext.Request.Headers["Origin"] = "null"; // File:// protocol
-            
+
             var formConfig = TestDataBuilder.CreateFormConfiguration(formId, ["*"]);
-            
-            _formConfigServiceMock.Setup(x => x.GetFormConfigurationAsync(formId))
+
+            formConfigServiceMock.Setup(x => x.GetFormConfigurationAsync(formId))
                                   .ReturnsAsync(formConfig);
 
             // Act
-            var result = await _service.ValidateFormAndOriginAsync(formId, httpContext.Request);
+            var result = await service.ValidateFormAndOriginAsync(formId, httpContext.Request);
 
             // Assert
             result.IsSuccess.Should().BeTrue();
@@ -111,14 +110,14 @@ public class FormValidationServiceTests : TestBase
             const string formId = "strict-form";
             var httpContext = new DefaultHttpContext();
             httpContext.Request.Headers["Origin"] = "null";
-            
+
             var formConfig = TestDataBuilder.CreateFormConfiguration(formId, ["example.com"]);
-            
-            _formConfigServiceMock.Setup(x => x.GetFormConfigurationAsync(formId))
+
+            formConfigServiceMock.Setup(x => x.GetFormConfigurationAsync(formId))
                                   .ReturnsAsync(formConfig);
 
             // Act
-            var result = await _service.ValidateFormAndOriginAsync(formId, httpContext.Request);
+            var result = await service.ValidateFormAndOriginAsync(formId, httpContext.Request);
 
             // Assert
             result.IsSuccess.Should().BeFalse();
@@ -131,14 +130,14 @@ public class FormValidationServiceTests : TestBase
             // Arrange
             const string formId = "strict-form";
             var httpContext = new DefaultHttpContext();
-            
+
             var formConfig = TestDataBuilder.CreateFormConfiguration(formId, ["example.com"]);
-            
-            _formConfigServiceMock.Setup(x => x.GetFormConfigurationAsync(formId))
+
+            formConfigServiceMock.Setup(x => x.GetFormConfigurationAsync(formId))
                                   .ReturnsAsync(formConfig);
 
             // Act
-            var result = await _service.ValidateFormAndOriginAsync(formId, httpContext.Request);
+            var result = await service.ValidateFormAndOriginAsync(formId, httpContext.Request);
 
             // Assert
             result.IsSuccess.Should().BeFalse();
@@ -153,14 +152,14 @@ public class FormValidationServiceTests : TestBase
             const string invalidOrigin = "not-a-valid-uri";
             var httpContext = new DefaultHttpContext();
             httpContext.Request.Headers["Origin"] = invalidOrigin;
-            
+
             var formConfig = TestDataBuilder.CreateFormConfiguration(formId, ["example.com"]);
-            
-            _formConfigServiceMock.Setup(x => x.GetFormConfigurationAsync(formId))
+
+            formConfigServiceMock.Setup(x => x.GetFormConfigurationAsync(formId))
                                   .ReturnsAsync(formConfig);
 
             // Act
-            var result = await _service.ValidateFormAndOriginAsync(formId, httpContext.Request);
+            var result = await service.ValidateFormAndOriginAsync(formId, httpContext.Request);
 
             // Assert
             result.IsSuccess.Should().BeFalse();
@@ -175,14 +174,14 @@ public class FormValidationServiceTests : TestBase
             const string invalidOrigin = "not-a-valid-uri";
             var httpContext = new DefaultHttpContext();
             httpContext.Request.Headers["Origin"] = invalidOrigin;
-            
+
             var formConfig = TestDataBuilder.CreateFormConfiguration(formId, ["*"]);
-            
-            _formConfigServiceMock.Setup(x => x.GetFormConfigurationAsync(formId))
+
+            formConfigServiceMock.Setup(x => x.GetFormConfigurationAsync(formId))
                                   .ReturnsAsync(formConfig);
 
             // Act
-            var result = await _service.ValidateFormAndOriginAsync(formId, httpContext.Request);
+            var result = await service.ValidateFormAndOriginAsync(formId, httpContext.Request);
 
             // Assert
             result.IsSuccess.Should().BeTrue();
@@ -196,16 +195,16 @@ public class FormValidationServiceTests : TestBase
             const string origin = "https://blocked.com";
             var httpContext = new DefaultHttpContext();
             httpContext.Request.Headers["Origin"] = origin;
-            
+
             var formConfig = TestDataBuilder.CreateFormConfiguration(formId, ["example.com"]);
-            
-            _formConfigServiceMock.Setup(x => x.GetFormConfigurationAsync(formId))
+
+            formConfigServiceMock.Setup(x => x.GetFormConfigurationAsync(formId))
                                   .ReturnsAsync(formConfig);
-            _formConfigServiceMock.Setup(x => x.IsDomainAllowedForFormAsync(formId, origin))
+            formConfigServiceMock.Setup(x => x.IsDomainAllowedForFormAsync(formId, origin))
                                   .ReturnsAsync(false);
 
             // Act
-            var result = await _service.ValidateFormAndOriginAsync(formId, httpContext.Request);
+            var result = await service.ValidateFormAndOriginAsync(formId, httpContext.Request);
 
             // Assert
             result.IsSuccess.Should().BeFalse();
@@ -220,16 +219,16 @@ public class FormValidationServiceTests : TestBase
             const string referer = "https://example.com/contact";
             var httpContext = new DefaultHttpContext();
             httpContext.Request.Headers["Referer"] = referer;
-            
+
             var formConfig = TestDataBuilder.CreateFormConfiguration(formId, ["example.com"]);
-            
-            _formConfigServiceMock.Setup(x => x.GetFormConfigurationAsync(formId))
+
+            formConfigServiceMock.Setup(x => x.GetFormConfigurationAsync(formId))
                                   .ReturnsAsync(formConfig);
-            _formConfigServiceMock.Setup(x => x.IsDomainAllowedForFormAsync(formId, "https://example.com"))
+            formConfigServiceMock.Setup(x => x.IsDomainAllowedForFormAsync(formId, "https://example.com"))
                                   .ReturnsAsync(true);
 
             // Act
-            var result = await _service.ValidateFormAndOriginAsync(formId, httpContext.Request);
+            var result = await service.ValidateFormAndOriginAsync(formId, httpContext.Request);
 
             // Assert
             result.IsSuccess.Should().BeTrue();
@@ -245,16 +244,16 @@ public class FormValidationServiceTests : TestBase
             const string formId = "test-form";
             var httpContext = new DefaultHttpContext();
             httpContext.Request.Headers["Origin"] = origin;
-            
+
             var formConfig = TestDataBuilder.CreateFormConfiguration(formId, ["*"]);
-            
-            _formConfigServiceMock.Setup(x => x.GetFormConfigurationAsync(formId))
+
+            formConfigServiceMock.Setup(x => x.GetFormConfigurationAsync(formId))
                                   .ReturnsAsync(formConfig);
-            _formConfigServiceMock.Setup(x => x.IsDomainAllowedForFormAsync(formId, It.IsAny<string>()))
+            formConfigServiceMock.Setup(x => x.IsDomainAllowedForFormAsync(formId, It.IsAny<string>()))
                                   .ReturnsAsync(true);
 
             // Act
-            var result = await _service.ValidateFormAndOriginAsync(formId, httpContext.Request);
+            var result = await service.ValidateFormAndOriginAsync(formId, httpContext.Request);
 
             // Assert
             result.IsSuccess.Should().BeTrue();
@@ -270,21 +269,21 @@ public class FormValidationServiceTests : TestBase
             var httpContext = new DefaultHttpContext();
             httpContext.Request.Headers["Origin"] = origin;
             httpContext.Request.Headers["Referer"] = referer;
-            
+
             var formConfig = TestDataBuilder.CreateFormConfiguration(formId, ["example.com"]);
-            
-            _formConfigServiceMock.Setup(x => x.GetFormConfigurationAsync(formId))
+
+            formConfigServiceMock.Setup(x => x.GetFormConfigurationAsync(formId))
                                   .ReturnsAsync(formConfig);
-            _formConfigServiceMock.Setup(x => x.IsDomainAllowedForFormAsync(formId, origin))
+            formConfigServiceMock.Setup(x => x.IsDomainAllowedForFormAsync(formId, origin))
                                   .ReturnsAsync(true);
 
             // Act
-            var result = await _service.ValidateFormAndOriginAsync(formId, httpContext.Request);
+            var result = await service.ValidateFormAndOriginAsync(formId, httpContext.Request);
 
             // Assert
             result.IsSuccess.Should().BeTrue();
-            _formConfigServiceMock.Verify(x => x.IsDomainAllowedForFormAsync(formId, origin), Times.Once);
-            _formConfigServiceMock.Verify(x => x.IsDomainAllowedForFormAsync(formId, referer), Times.Never);
+            formConfigServiceMock.Verify(x => x.IsDomainAllowedForFormAsync(formId, origin), Times.Once);
+            formConfigServiceMock.Verify(x => x.IsDomainAllowedForFormAsync(formId, referer), Times.Never);
         }
     }
 
@@ -298,21 +297,21 @@ public class FormValidationServiceTests : TestBase
             const string origin = "https://example.com";
             var httpContext = new DefaultHttpContext();
             httpContext.Request.Headers["Origin"] = origin;
-            
+
             var formConfig = TestDataBuilder.CreateFormConfiguration(formId, ["example.com"]);
             formConfig.PrivacyMode = true;
-            formConfig.Connectors = 
+            formConfig.Connectors =
             [
                 new("mailjet", "email", true, new Dictionary<string, object>())
             ];
-            
-            _formConfigServiceMock.Setup(x => x.GetFormConfigurationAsync(formId))
+
+            formConfigServiceMock.Setup(x => x.GetFormConfigurationAsync(formId))
                                   .ReturnsAsync(formConfig);
-            _formConfigServiceMock.Setup(x => x.IsDomainAllowedForFormAsync(formId, origin))
+            formConfigServiceMock.Setup(x => x.IsDomainAllowedForFormAsync(formId, origin))
                                   .ReturnsAsync(true);
 
             // Act
-            var result = await _service.ValidateFormAndOriginAsync(formId, httpContext.Request);
+            var result = await service.ValidateFormAndOriginAsync(formId, httpContext.Request);
 
             // Assert
             result.IsSuccess.Should().BeTrue();
@@ -327,19 +326,19 @@ public class FormValidationServiceTests : TestBase
             const string origin = "https://example.com";
             var httpContext = new DefaultHttpContext();
             httpContext.Request.Headers["Origin"] = origin;
-            
+
             var formConfig = TestDataBuilder.CreateFormConfiguration(formId, ["example.com"]);
             formConfig.PrivacyMode = true;
-            formConfig.Connectors = 
+            formConfig.Connectors =
             [
                 new("slack", "disabled", false, new Dictionary<string, object>())
             ];
-            
-            _formConfigServiceMock.Setup(x => x.GetFormConfigurationAsync(formId))
+
+            formConfigServiceMock.Setup(x => x.GetFormConfigurationAsync(formId))
                                   .ReturnsAsync(formConfig);
 
             // Act
-            var result = await _service.ValidateFormAndOriginAsync(formId, httpContext.Request);
+            var result = await service.ValidateFormAndOriginAsync(formId, httpContext.Request);
 
             // Assert
             result.IsSuccess.Should().BeFalse();
@@ -354,16 +353,16 @@ public class FormValidationServiceTests : TestBase
             const string origin = "https://example.com";
             var httpContext = new DefaultHttpContext();
             httpContext.Request.Headers["Origin"] = origin;
-            
+
             var formConfig = TestDataBuilder.CreateFormConfiguration(formId, ["example.com"]);
             formConfig.PrivacyMode = true;
             formConfig.Connectors = null; // No connectors at all
-            
-            _formConfigServiceMock.Setup(x => x.GetFormConfigurationAsync(formId))
+
+            formConfigServiceMock.Setup(x => x.GetFormConfigurationAsync(formId))
                                   .ReturnsAsync(formConfig);
 
             // Act
-            var result = await _service.ValidateFormAndOriginAsync(formId, httpContext.Request);
+            var result = await service.ValidateFormAndOriginAsync(formId, httpContext.Request);
 
             // Assert
             result.IsSuccess.Should().BeFalse();
@@ -378,18 +377,18 @@ public class FormValidationServiceTests : TestBase
             const string origin = "https://example.com";
             var httpContext = new DefaultHttpContext();
             httpContext.Request.Headers["Origin"] = origin;
-            
+
             var formConfig = TestDataBuilder.CreateFormConfiguration(formId, ["example.com"]);
             formConfig.PrivacyMode = false;
             formConfig.Connectors = null; // No connectors - should be fine when privacy mode is off
-            
-            _formConfigServiceMock.Setup(x => x.GetFormConfigurationAsync(formId))
+
+            formConfigServiceMock.Setup(x => x.GetFormConfigurationAsync(formId))
                                   .ReturnsAsync(formConfig);
-            _formConfigServiceMock.Setup(x => x.IsDomainAllowedForFormAsync(formId, origin))
+            formConfigServiceMock.Setup(x => x.IsDomainAllowedForFormAsync(formId, origin))
                                   .ReturnsAsync(true);
 
             // Act
-            var result = await _service.ValidateFormAndOriginAsync(formId, httpContext.Request);
+            var result = await service.ValidateFormAndOriginAsync(formId, httpContext.Request);
 
             // Assert
             result.IsSuccess.Should().BeTrue();

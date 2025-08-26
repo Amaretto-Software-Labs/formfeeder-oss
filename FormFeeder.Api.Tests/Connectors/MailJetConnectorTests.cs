@@ -2,38 +2,39 @@ using FormFeeder.Api.Connectors;
 using FormFeeder.Api.Models;
 using FormFeeder.Api.Services;
 using FormFeeder.Api.Tests.Infrastructure;
+
 using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+
 using Polly;
 
 namespace FormFeeder.Api.Tests.Connectors;
 
 public class MailJetConnectorTests : TestBase
 {
-    private readonly MailJetConnector _connector;
-    private readonly Mock<ILogger<MailJetConnector>> _loggerMock;
-    private readonly Mock<IEmailTemplateService> _emailTemplateServiceMock;
-    private readonly Mock<IRetryPolicyFactory> _retryPolicyFactoryMock;
+    private readonly MailJetConnector connector;
+    private readonly Mock<ILogger<MailJetConnector>> loggerMock;
+    private readonly Mock<IEmailTemplateService> emailTemplateServiceMock;
+    private readonly Mock<IRetryPolicyFactory> retryPolicyFactoryMock;
 
     public MailJetConnectorTests()
     {
-        _loggerMock = CreateMock<ILogger<MailJetConnector>>();
-        _emailTemplateServiceMock = CreateMock<IEmailTemplateService>();
-        _retryPolicyFactoryMock = CreateMock<IRetryPolicyFactory>();
-        
+        loggerMock = CreateMock<ILogger<MailJetConnector>>();
+        emailTemplateServiceMock = CreateMock<IEmailTemplateService>();
+        retryPolicyFactoryMock = CreateMock<IRetryPolicyFactory>();
+
         var configuration = CreateTestConfiguration();
-        
+
         // Setup retry policy mock to return a pass-through policy (no retry) for testing
         var passThoughPolicy = ResiliencePipeline.Empty;
-        _retryPolicyFactoryMock.Setup(x => x.CreateMailJetRetryPolicy())
+        retryPolicyFactoryMock.Setup(x => x.CreateMailJetRetryPolicy())
                               .Returns(passThoughPolicy);
-        
-        _connector = new MailJetConnector(
-            _loggerMock.Object, 
-            configuration, 
-            _emailTemplateServiceMock.Object,
-            _retryPolicyFactoryMock.Object,
+
+        connector = new MailJetConnector(
+            loggerMock.Object,
+            configuration,
+            emailTemplateServiceMock.Object,
+            retryPolicyFactoryMock.Object,
             "test-connector");
     }
 
@@ -42,7 +43,7 @@ public class MailJetConnectorTests : TestBase
         var inMemorySettings = new Dictionary<string, string?>
         {
             ["MailJet:ApiKey"] = "test-api-key",
-            ["MailJet:ApiSecret"] = "test-api-secret"
+            ["MailJet:ApiSecret"] = "test-api-secret",
         };
 
         return new ConfigurationBuilder()
@@ -57,10 +58,10 @@ public class MailJetConnectorTests : TestBase
         {
             // Arrange & Act
             var customConnector = new MailJetConnector(
-                _loggerMock.Object, 
-                CreateTestConfiguration(), 
-                _emailTemplateServiceMock.Object,
-                _retryPolicyFactoryMock.Object,
+                loggerMock.Object,
+                CreateTestConfiguration(),
+                emailTemplateServiceMock.Object,
+                retryPolicyFactoryMock.Object,
                 "custom-name");
 
             // Assert - Verify the connector is properly initialized with expected values
@@ -74,10 +75,10 @@ public class MailJetConnectorTests : TestBase
         {
             // Arrange & Act
             var defaultConnector = new MailJetConnector(
-                _loggerMock.Object, 
-                CreateTestConfiguration(), 
-                _emailTemplateServiceMock.Object,
-                _retryPolicyFactoryMock.Object);
+                loggerMock.Object,
+                CreateTestConfiguration(),
+                emailTemplateServiceMock.Object,
+                retryPolicyFactoryMock.Object);
 
             // Assert - Verify default naming behavior
             defaultConnector.Name.Should().Be("MailJet");
@@ -94,7 +95,7 @@ public class MailJetConnectorTests : TestBase
             var submission = TestDataBuilder.CreateFormSubmission();
 
             // Act
-            var result = await _connector.ExecuteAsync(submission, null);
+            var result = await connector.ExecuteAsync(submission, null);
 
             // Assert
             result.Success.Should().BeFalse();
@@ -109,11 +110,11 @@ public class MailJetConnectorTests : TestBase
             var config = new Dictionary<string, object>
             {
                 ["FromEmail"] = "test@example.com",
-                ["ToEmail"] = "recipient@example.com"
+                ["ToEmail"] = "recipient@example.com",
             };
 
             // Act
-            var result = await _connector.ExecuteAsync(submission, config);
+            var result = await connector.ExecuteAsync(submission, config);
 
             // Assert
             result.Success.Should().BeFalse();
@@ -128,11 +129,11 @@ public class MailJetConnectorTests : TestBase
             var config = new Dictionary<string, object>
             {
                 ["ApiKey"] = "test-key",
-                ["ApiSecret"] = "test-secret"
+                ["ApiSecret"] = "test-secret",
             };
 
             // Act
-            var result = await _connector.ExecuteAsync(submission, config);
+            var result = await connector.ExecuteAsync(submission, config);
 
             // Assert
             result.Success.Should().BeFalse();
@@ -153,11 +154,11 @@ public class MailJetConnectorTests : TestBase
                 ["ApiKey"] = credentialKey == "ApiKey" ? credentialValue! : "test-key",
                 ["ApiSecret"] = credentialKey == "ApiSecret" ? credentialValue! : "test-secret",
                 ["FromEmail"] = "test@example.com",
-                ["ToEmail"] = "recipient@example.com"
+                ["ToEmail"] = "recipient@example.com",
             };
 
             // Act
-            var result = await _connector.ExecuteAsync(submission, config);
+            var result = await connector.ExecuteAsync(submission, config);
 
             // Assert
             result.Success.Should().BeFalse();
@@ -178,11 +179,11 @@ public class MailJetConnectorTests : TestBase
                 ["ApiKey"] = "test-key",
                 ["ApiSecret"] = "test-secret",
                 ["FromEmail"] = emailKey == "FromEmail" ? emailValue! : "test@example.com",
-                ["ToEmail"] = emailKey == "ToEmail" ? emailValue! : "recipient@example.com"
+                ["ToEmail"] = emailKey == "ToEmail" ? emailValue! : "recipient@example.com",
             };
 
             // Act
-            var result = await _connector.ExecuteAsync(submission, config);
+            var result = await connector.ExecuteAsync(submission, config);
 
             // Assert
             result.Success.Should().BeFalse();
@@ -199,23 +200,23 @@ public class MailJetConnectorTests : TestBase
                 ["ApiKey"] = "test-key",
                 ["ApiSecret"] = "test-secret",
                 ["FromEmail"] = "sender@example.com",
-                ["ToEmail"] = "recipient@example.com"
+                ["ToEmail"] = "recipient@example.com",
             };
 
             var emailContent = new EmailContent(
-                "<html><body>Test HTML</body></html>", 
+                "<html><body>Test HTML</body></html>",
                 "Test plain text");
 
-            _emailTemplateServiceMock.Setup(x => x.GenerateEmailContent(submission))
+            emailTemplateServiceMock.Setup(x => x.GenerateEmailContent(submission))
                                    .Returns(emailContent);
 
             // Act
-            var result = await _connector.ExecuteAsync(submission, config);
+            var result = await connector.ExecuteAsync(submission, config);
 
             // Assert - Verify the connector attempts email generation and sending process
-            _emailTemplateServiceMock.Verify(x => x.GenerateEmailContent(submission), Times.Once,
+            emailTemplateServiceMock.Verify(x => x.GenerateEmailContent(submission), Times.Once,
                 "connector should generate email content when no template is specified");
-            
+
             // In test environment, the actual API call fails, but we verify the process was initiated
             result.Success.Should().BeFalse("actual MailJet API call fails in test environment");
             result.Should().NotBeNull("connector should always return a result");
@@ -231,18 +232,19 @@ public class MailJetConnectorTests : TestBase
                 ["ApiKey"] = "test-key",
                 ["ApiSecret"] = "test-secret",
                 ["FromEmail"] = "sender@example.com",
-                ["ToEmail"] = "recipient@example.com"
+                ["ToEmail"] = "recipient@example.com",
+
                 // Missing optional fields: FromName, ToName, Subject
             };
 
-            _emailTemplateServiceMock.Setup(x => x.GenerateEmailContent(submission))
+            emailTemplateServiceMock.Setup(x => x.GenerateEmailContent(submission))
                                    .Returns(new EmailContent("<html>Test</html>", "Test"));
 
             // Act
-            var result = await _connector.ExecuteAsync(submission, config);
+            var result = await connector.ExecuteAsync(submission, config);
 
             // Assert - Verify the connector handles minimal configuration properly
-            _emailTemplateServiceMock.Verify(x => x.GenerateEmailContent(submission), Times.Once,
+            emailTemplateServiceMock.Verify(x => x.GenerateEmailContent(submission), Times.Once,
                 "connector should generate email content for minimal configuration");
             result.Should().NotBeNull("connector should return a result even with minimal configuration");
         }
@@ -258,17 +260,18 @@ public class MailJetConnectorTests : TestBase
                 ["ApiSecret"] = "test-secret",
                 ["FromEmail"] = "sender@example.com",
                 ["ToEmail"] = "recipient@example.com",
-                ["TemplateId"] = "12345"
+                ["TemplateId"] = "12345",
             };
 
             // Act
-            var result = await _connector.ExecuteAsync(submission, config);
+            var result = await connector.ExecuteAsync(submission, config);
 
             // Assert - Verify template-based email flow
-            _emailTemplateServiceMock.Verify(x => x.GenerateEmailContent(It.IsAny<FormSubmission>()), Times.Never,
+            emailTemplateServiceMock.Verify(x => x.GenerateEmailContent(It.IsAny<FormSubmission>()), Times.Never,
                 "connector should not generate email content when using a template");
-            
+
             result.Should().NotBeNull("connector should return a result when using templates");
+
             // API call fails in test environment, but the template path was taken
             result.Success.Should().BeFalse("actual MailJet API call fails in test environment");
         }
@@ -284,11 +287,11 @@ public class MailJetConnectorTests : TestBase
                 ["ApiSecret"] = "test-secret",
                 ["FromEmail"] = "sender@example.com",
                 ["ToEmail"] = "recipient@example.com",
-                ["TemplateId"] = "invalid-template-id" // Not a valid integer
+                ["TemplateId"] = "invalid-template-id", // Not a valid integer
             };
 
             // Act
-            var result = await _connector.ExecuteAsync(submission, config);
+            var result = await connector.ExecuteAsync(submission, config);
 
             // Assert
             result.Success.Should().BeFalse();
@@ -306,22 +309,21 @@ public class MailJetConnectorTests : TestBase
                 ["ApiKey"] = "test-key",
                 ["ApiSecret"] = "test-secret",
                 ["FromEmail"] = "sender@example.com",
-                ["ToEmail"] = "recipient@example.com"
+                ["ToEmail"] = "recipient@example.com",
             };
 
             var exception = new InvalidOperationException("Test exception");
-            _emailTemplateServiceMock.Setup(x => x.GenerateEmailContent(It.IsAny<FormSubmission>()))
+            emailTemplateServiceMock.Setup(x => x.GenerateEmailContent(It.IsAny<FormSubmission>()))
                                    .Throws(exception);
 
             // Act
-            var result = await _connector.ExecuteAsync(submission, config);
+            var result = await connector.ExecuteAsync(submission, config);
 
             // Assert
             result.Success.Should().BeFalse();
             result.Message.Should().Contain("MailJet connector error");
             result.Error.Should().Be(exception);
         }
-
     }
 
     public class ConfigurationParsing : MailJetConnectorTests
@@ -340,11 +342,11 @@ public class MailJetConnectorTests : TestBase
                 ["ToEmail"] = "recipient@example.com",
                 ["ToName"] = "Test Recipient",
                 ["Subject"] = "Custom Subject",
-                ["TemplateId"] = "12345"
+                ["TemplateId"] = "12345",
             };
 
             // Act
-            var result = await _connector.ExecuteAsync(submission, config);
+            var result = await connector.ExecuteAsync(submission, config);
 
             // Assert
             // Even though the result will be a failure (due to actual API call in tests),
@@ -365,11 +367,11 @@ public class MailJetConnectorTests : TestBase
                 ["ApiKey"] = value, // Non-string value
                 ["ApiSecret"] = "test-secret",
                 ["FromEmail"] = "sender@example.com",
-                ["ToEmail"] = "recipient@example.com"
+                ["ToEmail"] = "recipient@example.com",
             };
 
             // Act
-            var result = await _connector.ExecuteAsync(submission, config);
+            var result = await connector.ExecuteAsync(submission, config);
 
             // Assert
             // Should not throw exception during conversion

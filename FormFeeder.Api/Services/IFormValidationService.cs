@@ -21,7 +21,7 @@ public sealed class FormValidationService(
 
         var formConfig = formValidationResult.Value!;
         var originValidationResult = await ValidateOriginDomain(formId, request, formConfig);
-        
+
         return originValidationResult.IsSuccess
             ? Result.Success(formId)
             : originValidationResult;
@@ -58,7 +58,7 @@ public sealed class FormValidationService(
     private async Task<Result<string>> ValidateOriginDomain(string formId, HttpRequest request, FormConfiguration formConfig)
     {
         var origin = ExtractOriginFromRequest(request);
-        
+
         if (IsNullOrLocalOrigin(origin))
         {
             return ValidateLocalOrigin(formId, formConfig);
@@ -98,7 +98,7 @@ public sealed class FormValidationService(
 
         var domain = $"{uri.Scheme}://{uri.Host}";
         var isAllowed = await formConfigService.IsDomainAllowedForFormAsync(formId, domain).ConfigureAwait(false);
-        
+
         if (!isAllowed)
         {
             logger.LogWarning("Attempted submission from unauthorized domain: {Domain} to form: {FormId}", domain, formId);
@@ -111,7 +111,7 @@ public sealed class FormValidationService(
     private static Result<string> ValidateInvalidOriginFormat(FormConfiguration formConfig)
     {
         return formConfig.AllowedDomains.Contains("*")
-            ? Result.Success("")
+            ? Result.Success(string.Empty)
             : Result.Failure<string>("Invalid origin format and wildcards not allowed");
     }
 }

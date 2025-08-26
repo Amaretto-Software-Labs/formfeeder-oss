@@ -1,5 +1,6 @@
 using FormFeeder.Api.Services;
 using FormFeeder.Api.Tests.Infrastructure;
+
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
@@ -7,12 +8,12 @@ namespace FormFeeder.Api.Tests.Services;
 
 public class RetryPolicyFactoryTests : TestBase
 {
-    private readonly RetryPolicyFactory _factory;
-    private readonly Mock<ILogger<RetryPolicyFactory>> _loggerMock;
+    private readonly RetryPolicyFactory factory;
+    private readonly Mock<ILogger<RetryPolicyFactory>> loggerMock;
 
     public RetryPolicyFactoryTests()
     {
-        _loggerMock = CreateMock<ILogger<RetryPolicyFactory>>();
+        loggerMock = CreateMock<ILogger<RetryPolicyFactory>>();
         var configuration = new RetryPolicyConfiguration
         {
             MaxRetryAttempts = 3,
@@ -20,12 +21,12 @@ public class RetryPolicyFactoryTests : TestBase
             MaxDelaySeconds = 30,
             UseJitter = true,
             JitterType = "Decorrelated",
-            BackoffType = "Exponential"
+            BackoffType = "Exponential",
         };
         var optionsMock = CreateMock<IOptions<RetryPolicyConfiguration>>();
         optionsMock.Setup(x => x.Value).Returns(configuration);
-        
-        _factory = new RetryPolicyFactory(optionsMock.Object, _loggerMock.Object);
+
+        factory = new RetryPolicyFactory(optionsMock.Object, loggerMock.Object);
     }
 
     public class CreateHttpRetryPolicy : RetryPolicyFactoryTests
@@ -34,7 +35,7 @@ public class RetryPolicyFactoryTests : TestBase
         public void CreateHttpRetryPolicy_ShouldReturnValidPipeline()
         {
             // Act
-            var policy = _factory.CreateHttpRetryPolicy();
+            var policy = factory.CreateHttpRetryPolicy();
 
             // Assert
             policy.Should().NotBeNull();
@@ -47,7 +48,7 @@ public class RetryPolicyFactoryTests : TestBase
         public void CreateMailJetRetryPolicy_ShouldReturnValidPipeline()
         {
             // Act
-            var policy = _factory.CreateMailJetRetryPolicy();
+            var policy = factory.CreateMailJetRetryPolicy();
 
             // Assert
             policy.Should().NotBeNull();
@@ -60,7 +61,7 @@ public class RetryPolicyFactoryTests : TestBase
         public void CreateSlackRetryPolicy_ShouldReturnValidPipeline()
         {
             // Act
-            var policy = _factory.CreateSlackRetryPolicy();
+            var policy = factory.CreateSlackRetryPolicy();
 
             // Assert
             policy.Should().NotBeNull();
@@ -82,11 +83,11 @@ public class RetryPolicyFactoryTests : TestBase
                 MaxRetryAttempts = 2,
                 BaseDelaySeconds = 1,
                 MaxDelaySeconds = 10,
-                BackoffType = backoffType
+                BackoffType = backoffType,
             };
             var optionsMock = CreateMock<IOptions<RetryPolicyConfiguration>>();
             optionsMock.Setup(x => x.Value).Returns(configuration);
-            var factory = new RetryPolicyFactory(optionsMock.Object, _loggerMock.Object);
+            var factory = new RetryPolicyFactory(optionsMock.Object, loggerMock.Object);
 
             // Act & Assert
             var action = () => factory.CreateHttpRetryPolicy();
@@ -101,11 +102,11 @@ public class RetryPolicyFactoryTests : TestBase
             {
                 MaxRetryAttempts = 1, // Minimum allowed by Polly
                 BaseDelaySeconds = 1,
-                MaxDelaySeconds = 10
+                MaxDelaySeconds = 10,
             };
             var optionsMock = CreateMock<IOptions<RetryPolicyConfiguration>>();
             optionsMock.Setup(x => x.Value).Returns(configuration);
-            var factory = new RetryPolicyFactory(optionsMock.Object, _loggerMock.Object);
+            var factory = new RetryPolicyFactory(optionsMock.Object, loggerMock.Object);
 
             // Act & Assert
             var action = () => factory.CreateHttpRetryPolicy();

@@ -1,9 +1,9 @@
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+
 using FormFeeder.Api.Models;
 using FormFeeder.Api.Services;
-using Polly;
 
 namespace FormFeeder.Api.Connectors;
 
@@ -43,7 +43,9 @@ public sealed class SlackConnector(
     string name = "Slack") : IConnector
 {
     public string Type => "Slack";
+
     public string Name { get; } = name ?? "Slack";
+
     public bool Enabled { get; set; } = true;
 
     public async Task<ConnectorResult> ExecuteAsync(FormSubmission submission, Dictionary<string, object>? configuration = null)
@@ -58,14 +60,13 @@ public sealed class SlackConnector(
 
             var config = configResult.Value!;
             var message = BuildSlackMessage(submission, config);
-            
+
             logger.LogDebug("Sending Slack notification for form {FormId} to webhook", submission.FormId);
-            
+
             var result = await SendSlackMessageAsync(config.WebhookUrl, message);
             return result.Match(
                 success => CreateSuccessResult(success),
-                error => ConnectorResult.Failed(error)
-            );
+                error => ConnectorResult.Failed(error));
         }
         catch (Exception ex)
         {
@@ -87,7 +88,7 @@ public sealed class SlackConnector(
             return Result.Failure<SlackConfiguration>("Slack webhook URL is missing");
         }
 
-        if (!Uri.TryCreate(webhookUrl, UriKind.Absolute, out var uri) || 
+        if (!Uri.TryCreate(webhookUrl, UriKind.Absolute, out var uri) ||
             (uri.Scheme != Uri.UriSchemeHttp && uri.Scheme != Uri.UriSchemeHttps))
         {
             return Result.Failure<SlackConfiguration>("Invalid Slack webhook URL");
@@ -108,23 +109,24 @@ public sealed class SlackConnector(
         var retryPolicy = retryPolicyFactory.CreateSlackRetryPolicy();
         var json = JsonSerializer.Serialize(message);
         using var content = new StringContent(json, Encoding.UTF8, "application/json");
-        
+
         try
         {
-            var response = await retryPolicy.ExecuteAsync(async _ => 
+            var response = await retryPolicy.ExecuteAsync(async _ =>
                 await httpClient.PostAsync(webhookUrl, content));
-                
+
             var responseBody = await response.Content.ReadAsStringAsync();
-            
+
             if (response.IsSuccessStatusCode)
             {
                 logger.LogInformation("Slack notification sent successfully. Response: {Response}", responseBody);
                 return Result.Success(responseBody);
             }
-            
-            logger.LogWarning("Failed to send Slack notification. Status: {StatusCode}, Response: {Response}", 
+
+            logger.LogWarning(
+                "Failed to send Slack notification. Status: {StatusCode}, Response: {Response}",
                 response.StatusCode, responseBody);
-            
+
             return Result.Failure<string>($"Failed to send Slack notification. Status: {response.StatusCode}, Error: {responseBody}");
         }
         catch (Exception ex)
@@ -138,9 +140,9 @@ public sealed class SlackConnector(
     {
         var metadata = new Dictionary<string, object>
         {
-            ["Response"] = responseBody
+            ["Response"] = responseBody,
         };
-        
+
         return ConnectorResult.Successful("Slack notification sent", metadata);
     }
 
@@ -148,7 +150,7 @@ public sealed class SlackConnector(
     {
         var formFields = ExtractFormFields(submission.FormData);
         var metadataFields = CreateMetadataFields(submission);
-        
+
         var attachments = new List<SlackAttachment>
         {
             new(
@@ -158,12 +160,10 @@ public sealed class SlackConnector(
                 Title: $"Form: {submission.FormId}",
                 Fields: formFields,
                 Footer: "FormFeeder",
-                Timestamp: new DateTimeOffset(submission.SubmittedAt).ToUnixTimeSeconds()
-            ),
+                Timestamp: new DateTimeOffset(submission.SubmittedAt).ToUnixTimeSeconds()),
             new(
                 Color: "#e0e0e0",
-                Fields: metadataFields
-            )
+                Fields: metadataFields),
         };
 
         if (config.IncludeRawJson)
@@ -172,16 +172,14 @@ public sealed class SlackConnector(
                 Color: "#f0f0f0",
                 Title: "Raw JSON Data",
                 Text: $"```{submission.FormData.RootElement}```",
-                MarkdownIn: ["text"]
-            ));
+                MarkdownIn: ["text"]));
         }
 
         return new SlackMessage(
             Username: config.Username,
             IconEmoji: config.IconEmoji,
             Attachments: [.. attachments],
-            Channel: config.Channel
-        );
+            Channel: config.Channel);
     }
 
     private static SlackField[] ExtractFormFields(JsonDocument formData)
@@ -192,20 +190,19 @@ public sealed class SlackConnector(
         }
 
         var fields = new List<SlackField>();
-        
+
         foreach (var property in formData.RootElement.EnumerateObject())
         {
-            var value = property.Value.ValueKind == JsonValueKind.String 
-                ? property.Value.GetString() 
+            var value = property.Value.ValueKind == JsonValueKind.String
+                ? property.Value.GetString()
                 : property.Value.ToString();
-                
+
             var truncatedValue = TruncateValue(value);
-            
+
             fields.Add(new SlackField(
                 Title: FormatFieldName(property.Name),
                 Value: truncatedValue ?? "N/A",
-                Short: (truncatedValue?.Length ?? 0) < 40
-            ));
+                Short: (truncatedValue?.Length ?? 0) < 40));
         }
 
         return [.. fields];
@@ -216,23 +213,24 @@ public sealed class SlackConnector(
         new(
             Title: "Submitted At",
             Value: submission.SubmittedAt.ToString("yyyy-MM-dd HH:mm:ss UTC"),
-            Short: true
-        ),
+            Short: true),
         new(
             Title: "IP Address",
             Value: submission.ClientIp ?? "Unknown",
-            Short: true
-        ),
+            Short: true),
         new(
             Title: "User Agent",
             Value: TruncateUserAgent(submission.UserAgent),
-            Short: false
-        )
+            Short: false)
     ];
 
     private static string? TruncateValue(string? value)
     {
-        if (value is null) return null;
+        if (value is null)
+        {
+            return null;
+        }
+
         return value.Length > 100 ? $"{value[..97]}..." : value;
     }
 
@@ -244,7 +242,7 @@ public sealed class SlackConnector(
     private static IEnumerable<string> SplitCamelCase(string input)
     {
         var currentWord = new StringBuilder();
-        
+
         foreach (var ch in input)
         {
             if (char.IsUpper(ch) && currentWord.Length > 0)
@@ -252,9 +250,10 @@ public sealed class SlackConnector(
                 yield return currentWord.ToString();
                 currentWord.Clear();
             }
+
             currentWord.Append(ch);
         }
-        
+
         if (currentWord.Length > 0)
         {
             yield return currentWord.ToString();
@@ -266,8 +265,6 @@ public sealed class SlackConnector(
         {
             null or "" => "Unknown",
             { Length: <= 100 } => userAgent,
-            _ => $"{userAgent[..97]}..."
+            _ => $"{userAgent[..97]}...",
         };
 }
-
-

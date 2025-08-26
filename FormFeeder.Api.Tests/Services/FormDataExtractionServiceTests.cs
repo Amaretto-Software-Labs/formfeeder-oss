@@ -1,5 +1,7 @@
 using System.Text;
+
 using FormFeeder.Api.Services;
+
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Primitives;
 
@@ -7,11 +9,11 @@ namespace FormFeeder.Api.Tests.Services;
 
 public class FormDataExtractionServiceTests
 {
-    private readonly FormDataExtractionService _service;
+    private readonly FormDataExtractionService service;
 
     public FormDataExtractionServiceTests()
     {
-        _service = new FormDataExtractionService();
+        service = new FormDataExtractionService();
     }
 
     public class ExtractFormData : FormDataExtractionServiceTests
@@ -22,18 +24,18 @@ public class FormDataExtractionServiceTests
             // Arrange
             var httpContext = new DefaultHttpContext();
             httpContext.Request.ContentType = "application/x-www-form-urlencoded";
-            
+
             var formCollection = new FormCollection(new Dictionary<string, StringValues>
             {
                 ["name"] = "John Doe",
                 ["email"] = "john@example.com",
-                ["age"] = "30"
+                ["age"] = "30",
             });
-            
+
             httpContext.Request.Form = formCollection;
 
             // Act
-            var result = await _service.ExtractFormDataAsync(httpContext.Request);
+            var result = await service.ExtractFormDataAsync(httpContext.Request);
 
             // Assert
             result.Should().HaveCount(3);
@@ -48,16 +50,16 @@ public class FormDataExtractionServiceTests
             // Arrange
             var httpContext = new DefaultHttpContext();
             httpContext.Request.ContentType = "application/x-www-form-urlencoded";
-            
+
             var formCollection = new FormCollection(new Dictionary<string, StringValues>
             {
-                ["hobbies"] = new StringValues(["reading", "swimming", "coding"])
+                ["hobbies"] = new StringValues(["reading", "swimming", "coding"]),
             });
-            
+
             httpContext.Request.Form = formCollection;
 
             // Act
-            var result = await _service.ExtractFormDataAsync(httpContext.Request);
+            var result = await service.ExtractFormDataAsync(httpContext.Request);
 
             // Assert
             result.Should().ContainKey("hobbies");
@@ -72,16 +74,16 @@ public class FormDataExtractionServiceTests
             // Arrange
             var httpContext = new DefaultHttpContext();
             httpContext.Request.ContentType = "application/x-www-form-urlencoded";
-            
+
             var formCollection = new FormCollection(new Dictionary<string, StringValues>
             {
-                ["empty_field"] = StringValues.Empty
+                ["empty_field"] = StringValues.Empty,
             });
-            
+
             httpContext.Request.Form = formCollection;
 
             // Act
-            var result = await _service.ExtractFormDataAsync(httpContext.Request);
+            var result = await service.ExtractFormDataAsync(httpContext.Request);
 
             // Assert
             result.Should().ContainKey("empty_field");
@@ -96,7 +98,7 @@ public class FormDataExtractionServiceTests
             httpContext.Request.ContentType = "application/json";
 
             // Act
-            var result = await _service.ExtractFormDataAsync(httpContext.Request);
+            var result = await service.ExtractFormDataAsync(httpContext.Request);
 
             // Assert
             result.Should().BeEmpty();
@@ -109,7 +111,7 @@ public class FormDataExtractionServiceTests
             var httpContext = new DefaultHttpContext();
 
             // Act
-            var result = await _service.ExtractFormDataAsync(httpContext.Request);
+            var result = await service.ExtractFormDataAsync(httpContext.Request);
 
             // Assert
             result.Should().BeEmpty();
@@ -121,27 +123,26 @@ public class FormDataExtractionServiceTests
             // Arrange
             var httpContext = new DefaultHttpContext();
             httpContext.Request.ContentType = "multipart/form-data";
-            
+
             var mockFile = new Mock<IFormFile>();
             mockFile.Setup(f => f.Name).Returns("upload");
             mockFile.Setup(f => f.FileName).Returns("test.txt");
             mockFile.Setup(f => f.ContentType).Returns("text/plain");
             mockFile.Setup(f => f.Length).Returns(1024);
-            
+
             var formCollection = new FormCollection(
                 new Dictionary<string, StringValues> { ["name"] = "John" },
-                new FormFileCollection { mockFile.Object }
-            );
-            
+                new FormFileCollection { mockFile.Object });
+
             httpContext.Request.Form = formCollection;
 
             // Act
-            var result = await _service.ExtractFormDataAsync(httpContext.Request);
+            var result = await service.ExtractFormDataAsync(httpContext.Request);
 
             // Assert
             result.Should().ContainKey("name");
             result.Should().ContainKey("_files");
-            
+
             var files = result["_files"] as object[];
             files.Should().NotBeNull();
             files.Should().HaveCount(1);
@@ -153,28 +154,27 @@ public class FormDataExtractionServiceTests
             // Arrange
             var httpContext = new DefaultHttpContext();
             httpContext.Request.ContentType = "multipart/form-data";
-            
+
             var mockFile1 = new Mock<IFormFile>();
             mockFile1.Setup(f => f.Name).Returns("file1");
             mockFile1.Setup(f => f.FileName).Returns("doc1.pdf");
             mockFile1.Setup(f => f.ContentType).Returns("application/pdf");
             mockFile1.Setup(f => f.Length).Returns(2048);
-            
+
             var mockFile2 = new Mock<IFormFile>();
             mockFile2.Setup(f => f.Name).Returns("file2");
             mockFile2.Setup(f => f.FileName).Returns("image.jpg");
             mockFile2.Setup(f => f.ContentType).Returns("image/jpeg");
             mockFile2.Setup(f => f.Length).Returns(4096);
-            
+
             var formCollection = new FormCollection(
                 new Dictionary<string, StringValues>(),
-                new FormFileCollection { mockFile1.Object, mockFile2.Object }
-            );
-            
+                new FormFileCollection { mockFile1.Object, mockFile2.Object });
+
             httpContext.Request.Form = formCollection;
 
             // Act
-            var result = await _service.ExtractFormDataAsync(httpContext.Request);
+            var result = await service.ExtractFormDataAsync(httpContext.Request);
 
             // Assert
             result.Should().ContainKey("_files");
@@ -191,16 +191,16 @@ public class FormDataExtractionServiceTests
             // Arrange
             var httpContext = new DefaultHttpContext();
             httpContext.Request.ContentType = contentType;
-            
+
             var formCollection = new FormCollection(new Dictionary<string, StringValues>
             {
-                ["test"] = "value"
+                ["test"] = "value",
             });
-            
+
             httpContext.Request.Form = formCollection;
 
             // Act
-            var result = await _service.ExtractFormDataAsync(httpContext.Request);
+            var result = await service.ExtractFormDataAsync(httpContext.Request);
 
             // Assert
             result.Should().ContainKey("test");
@@ -212,19 +212,19 @@ public class FormDataExtractionServiceTests
             // Arrange
             var httpContext = new DefaultHttpContext();
             httpContext.Request.ContentType = "application/x-www-form-urlencoded";
-            
+
             var formCollection = new FormCollection(new Dictionary<string, StringValues>
             {
                 ["field_with_underscore"] = "value1",
                 ["field-with-dash"] = "value2",
                 ["field[with][brackets]"] = "value3",
-                ["field.with.dots"] = "value4"
+                ["field.with.dots"] = "value4",
             });
-            
+
             httpContext.Request.Form = formCollection;
 
             // Act
-            var result = await _service.ExtractFormDataAsync(httpContext.Request);
+            var result = await service.ExtractFormDataAsync(httpContext.Request);
 
             // Assert
             result.Should().HaveCount(4);
@@ -244,7 +244,7 @@ public class FormDataExtractionServiceTests
             httpContext.Request.Body = new MemoryStream(Encoding.UTF8.GetBytes(json));
 
             // Act
-            var result = await _service.ExtractFormDataAsync(httpContext.Request);
+            var result = await service.ExtractFormDataAsync(httpContext.Request);
 
             // Assert
             result.Should().HaveCount(3);
@@ -271,13 +271,13 @@ public class FormDataExtractionServiceTests
             httpContext.Request.Body = new MemoryStream(Encoding.UTF8.GetBytes(json));
 
             // Act
-            var result = await _service.ExtractFormDataAsync(httpContext.Request);
+            var result = await service.ExtractFormDataAsync(httpContext.Request);
 
             // Assert
             result.Should().HaveCount(2);
             result["name"].Should().Be("John Doe");
             result["address"].Should().BeOfType<Dictionary<string, object>>();
-            
+
             var address = (Dictionary<string, object>)result["address"];
             address["street"].Should().Be("123 Main St");
             address["city"].Should().Be("New York");
@@ -293,7 +293,7 @@ public class FormDataExtractionServiceTests
             httpContext.Request.Body = new MemoryStream(Encoding.UTF8.GetBytes(json));
 
             // Act
-            var result = await _service.ExtractFormDataAsync(httpContext.Request);
+            var result = await service.ExtractFormDataAsync(httpContext.Request);
 
             // Assert
             result.Should().ContainKey("hobbies");
@@ -312,7 +312,7 @@ public class FormDataExtractionServiceTests
             httpContext.Request.Body = new MemoryStream(Encoding.UTF8.GetBytes(malformedJson));
 
             // Act
-            var result = await _service.ExtractFormDataAsync(httpContext.Request);
+            var result = await service.ExtractFormDataAsync(httpContext.Request);
 
             // Assert
             result.Should().BeEmpty();
@@ -328,7 +328,7 @@ public class FormDataExtractionServiceTests
             httpContext.Request.Body = new MemoryStream(Encoding.UTF8.GetBytes(json));
 
             // Act
-            var result = await _service.ExtractFormDataAsync(httpContext.Request);
+            var result = await service.ExtractFormDataAsync(httpContext.Request);
 
             // Assert
             result.Should().BeEmpty();
@@ -340,10 +340,10 @@ public class FormDataExtractionServiceTests
             // Arrange
             var httpContext = new DefaultHttpContext();
             httpContext.Request.ContentType = "application/json";
-            httpContext.Request.Body = new MemoryStream(Encoding.UTF8.GetBytes(""));
+            httpContext.Request.Body = new MemoryStream(Encoding.UTF8.GetBytes(string.Empty));
 
             // Act
-            var result = await _service.ExtractFormDataAsync(httpContext.Request);
+            var result = await service.ExtractFormDataAsync(httpContext.Request);
 
             // Assert
             result.Should().BeEmpty();
@@ -359,7 +359,7 @@ public class FormDataExtractionServiceTests
             httpContext.Request.Body = new MemoryStream(Encoding.UTF8.GetBytes(json));
 
             // Act
-            var result = await _service.ExtractFormDataAsync(httpContext.Request);
+            var result = await service.ExtractFormDataAsync(httpContext.Request);
 
             // Assert
             result.Should().HaveCount(2);
@@ -381,7 +381,7 @@ public class FormDataExtractionServiceTests
             httpContext.Request.ContentType = "application/x-www-form-urlencoded";
 
             // Act
-            var result = _service.ExtractClientInfo(httpContext.Request);
+            var result = service.ExtractClientInfo(httpContext.Request);
 
             // Assert
             result.IpAddress.Should().Be("203.0.113.1");
@@ -397,7 +397,7 @@ public class FormDataExtractionServiceTests
             var httpContext = new DefaultHttpContext();
 
             // Act
-            var result = _service.ExtractClientInfo(httpContext.Request);
+            var result = service.ExtractClientInfo(httpContext.Request);
 
             // Assert
             result.IpAddress.Should().BeNull();
@@ -411,15 +411,15 @@ public class FormDataExtractionServiceTests
         {
             // Arrange
             var httpContext = new DefaultHttpContext();
-            httpContext.Request.Headers["User-Agent"] = "";
-            httpContext.Request.Headers["Referer"] = "";
+            httpContext.Request.Headers["User-Agent"] = string.Empty;
+            httpContext.Request.Headers["Referer"] = string.Empty;
 
             // Act
-            var result = _service.ExtractClientInfo(httpContext.Request);
+            var result = service.ExtractClientInfo(httpContext.Request);
 
             // Assert
-            result.UserAgent.Should().Be("");
-            result.Referer.Should().Be("");
+            result.UserAgent.Should().Be(string.Empty);
+            result.Referer.Should().Be(string.Empty);
         }
 
         [Fact]
@@ -431,7 +431,7 @@ public class FormDataExtractionServiceTests
             httpContext.Request.Headers["User-Agent"] = complexUserAgent;
 
             // Act
-            var result = _service.ExtractClientInfo(httpContext.Request);
+            var result = service.ExtractClientInfo(httpContext.Request);
 
             // Assert
             result.UserAgent.Should().Be(complexUserAgent);
@@ -446,7 +446,7 @@ public class FormDataExtractionServiceTests
             httpContext.Request.Headers["Referer"] = complexReferer;
 
             // Act
-            var result = _service.ExtractClientInfo(httpContext.Request);
+            var result = service.ExtractClientInfo(httpContext.Request);
 
             // Assert
             result.Referer.Should().Be(complexReferer);
@@ -464,7 +464,7 @@ public class FormDataExtractionServiceTests
             httpContext.Request.ContentType = contentType;
 
             // Act
-            var result = _service.ExtractClientInfo(httpContext.Request);
+            var result = service.ExtractClientInfo(httpContext.Request);
 
             // Assert
             result.ContentType.Should().Be(contentType);
@@ -478,7 +478,7 @@ public class FormDataExtractionServiceTests
             httpContext.Request.Headers["X-Real-IP"] = "192.168.1.1";
 
             // Act
-            var result = _service.ExtractClientInfo(httpContext.Request);
+            var result = service.ExtractClientInfo(httpContext.Request);
 
             // Assert
             result.IpAddress.Should().Be("192.168.1.1");

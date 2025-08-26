@@ -1,6 +1,7 @@
 using FormFeeder.Api.Connectors;
 using FormFeeder.Api.Models;
 using FormFeeder.Api.Services.Configuration;
+
 using Microsoft.Extensions.Options;
 
 namespace FormFeeder.Api.Services;
@@ -10,26 +11,26 @@ namespace FormFeeder.Api.Services;
 /// </summary>
 public sealed class PrivateFormGenerationService : IPrivateFormGenerationService
 {
-    private readonly IFormIdGenerationService _formIdGenerator;
-    private readonly MailJetDefaults _mailJetDefaults;
-    private readonly ILogger<PrivateFormGenerationService> _logger;
+    private readonly IFormIdGenerationService formIdGenerator;
+    private readonly MailJetDefaults mailJetDefaults;
+    private readonly ILogger<PrivateFormGenerationService> logger;
 
     public PrivateFormGenerationService(
         IFormIdGenerationService formIdGenerator,
         IOptions<MailJetDefaults> mailJetDefaults,
         ILogger<PrivateFormGenerationService> logger)
     {
-        _formIdGenerator = formIdGenerator;
-        _mailJetDefaults = mailJetDefaults.Value;
-        _logger = logger;
+        this.formIdGenerator = formIdGenerator;
+        this.mailJetDefaults = mailJetDefaults.Value;
+        this.logger = logger;
     }
 
     public Task<FormConfiguration> GeneratePrivateFormAsync(string recipientEmail)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(recipientEmail);
 
-        var formId = _formIdGenerator.GeneratePrivateFormId();
-        
+        var formId = formIdGenerator.GeneratePrivateFormId();
+
         var formConfiguration = new FormConfiguration
         {
             FormId = formId,
@@ -40,9 +41,9 @@ public sealed class PrivateFormGenerationService : IPrivateFormGenerationService
             RateLimit = new RateLimitSettings
             {
                 RequestsPerWindow = 100,
-                WindowMinutes = 1
+                WindowMinutes = 1,
             },
-            Connectors = 
+            Connectors =
             [
                 new ConnectorConfiguration(
                     Type: "MailJet",
@@ -50,20 +51,20 @@ public sealed class PrivateFormGenerationService : IPrivateFormGenerationService
                     Enabled: true,
                     Settings: new Dictionary<string, object>
                     {
-                        ["ApiKey"] = _mailJetDefaults.ApiKey,
-                        ["ApiSecret"] = _mailJetDefaults.ApiSecret,
-                        ["FromEmail"] = _mailJetDefaults.FromEmail,
-                        ["FromName"] = _mailJetDefaults.FromName,
+                        ["ApiKey"] = mailJetDefaults.ApiKey,
+                        ["ApiSecret"] = mailJetDefaults.ApiSecret,
+                        ["FromEmail"] = mailJetDefaults.FromEmail,
+                        ["FromName"] = mailJetDefaults.FromName,
                         ["ToEmail"] = recipientEmail,
                         ["ToName"] = "Recipient",
-                        ["Subject"] = _mailJetDefaults.Subject,
-                        ["TemplateId"] = _mailJetDefaults.TemplateId
-                    }
-                )
-            ]
+                        ["Subject"] = mailJetDefaults.Subject,
+                        ["TemplateId"] = mailJetDefaults.TemplateId
+                    })
+            ],
         };
 
-        _logger.LogInformation("Generated private form configuration {FormId} for recipient {RecipientEmail}", 
+        logger.LogInformation(
+            "Generated private form configuration {FormId} for recipient {RecipientEmail}",
             formId, recipientEmail);
 
         return Task.FromResult(formConfiguration);

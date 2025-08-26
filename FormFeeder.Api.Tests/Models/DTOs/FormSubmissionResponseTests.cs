@@ -1,4 +1,3 @@
-using FormFeeder.Api.Models;
 using FormFeeder.Api.Models.DTOs;
 using FormFeeder.Api.Tests.Infrastructure;
 
@@ -33,9 +32,9 @@ public class FormSubmissionResponseTests
         {
             // Arrange
             var baseData = (Guid.NewGuid(), "test-form", DateTime.UtcNow, true, "Success", TestDataBuilder.CreateFormSubmission());
-            
-            var response1 = new FormSubmissionResponse(baseData.Item1, baseData.Item2, baseData.Item3, baseData.Item4, baseData.Item5, baseData.Item6);
-            var response2 = new FormSubmissionResponse(Guid.NewGuid(), baseData.Item2, baseData.Item3, baseData.Item4, baseData.Item5, baseData.Item6);
+
+            var response1 = new FormSubmissionResponse(baseData.Item1, baseData.Item2, baseData.UtcNow, baseData.Item4, baseData.Item5, baseData.Item6);
+            var response2 = new FormSubmissionResponse(Guid.NewGuid(), baseData.Item2, baseData.UtcNow, baseData.Item4, baseData.Item5, baseData.Item6);
 
             // Assert
             response1.Should().NotBe(response2);
@@ -319,7 +318,7 @@ public class FormSubmissionResponseTests
             modified.Should().NotBeSameAs(original);
             modified.Message.Should().Be("Modified");
             original.Message.Should().Be("Original");
-            
+
             // Other properties should be the same
             modified.Id.Should().Be(original.Id);
             modified.FormId.Should().Be(original.FormId);

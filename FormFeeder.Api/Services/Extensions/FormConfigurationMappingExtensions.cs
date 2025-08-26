@@ -1,7 +1,8 @@
+using System.Text.Json;
+
 using FormFeeder.Api.Connectors;
 using FormFeeder.Api.Models;
 using FormFeeder.Api.Models.Entities;
-using System.Text.Json;
 
 namespace FormFeeder.Api.Services.Extensions;
 
@@ -10,7 +11,7 @@ internal static class FormConfigurationMappingExtensions
     private static readonly JsonSerializerOptions JsonOptions = new()
     {
         PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-        WriteIndented = false
+        WriteIndented = false,
     };
 
     public static FormConfiguration ToFormConfiguration(this FormConfigurationEntity entity)
@@ -21,7 +22,7 @@ internal static class FormConfigurationMappingExtensions
             Description = entity.Description,
             Enabled = entity.Enabled,
             PrivacyMode = entity.PrivacyMode,
-            AllowedDomains = entity.AllowedDomains.Select(d => d.Domain).ToList()
+            AllowedDomains = entity.AllowedDomains.Select(d => d.Domain).ToList(),
         };
 
         // Map rate limit settings
@@ -30,7 +31,7 @@ internal static class FormConfigurationMappingExtensions
             config.RateLimit = new RateLimitSettings
             {
                 RequestsPerWindow = entity.RateLimit.RequestsPerWindow,
-                WindowMinutes = entity.RateLimit.WindowMinutes
+                WindowMinutes = entity.RateLimit.WindowMinutes,
             };
         }
 
@@ -57,7 +58,7 @@ internal static class FormConfigurationMappingExtensions
             UpdatedAt = DateTime.UtcNow,
             AllowedDomains = config.AllowedDomains
                 .Select(domain => new AllowedDomainEntity { Domain = domain })
-                .ToList()
+                .ToList(),
         };
 
         // Map rate limit settings
@@ -66,7 +67,7 @@ internal static class FormConfigurationMappingExtensions
             entity.RateLimit = new RateLimitSettingsEntity
             {
                 RequestsPerWindow = config.RateLimit.RequestsPerWindow,
-                WindowMinutes = config.RateLimit.WindowMinutes
+                WindowMinutes = config.RateLimit.WindowMinutes,
             };
         }
 
@@ -84,7 +85,7 @@ internal static class FormConfigurationMappingExtensions
     public static ConnectorConfiguration ToConnectorConfiguration(this ConnectorConfigurationEntity entity)
     {
         var settings = new Dictionary<string, object>();
-        
+
         if (!string.IsNullOrEmpty(entity.SettingsJson))
         {
             try
@@ -117,7 +118,7 @@ internal static class FormConfigurationMappingExtensions
             Type = config.Type,
             Name = config.Name,
             Enabled = config.Enabled,
-            SettingsJson = settingsJson
+            SettingsJson = settingsJson,
         };
     }
 
@@ -143,6 +144,6 @@ internal static class FormConfigurationMappingExtensions
         JsonValueKind.Null => null!,
         JsonValueKind.Object => JsonElementToDictionary(element),
         JsonValueKind.Array => element.EnumerateArray().Select(JsonElementToObject).ToArray(),
-        _ => element.GetRawText()
+        _ => element.GetRawText(),
     };
 }

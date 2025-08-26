@@ -1,5 +1,6 @@
-using FormFeeder.Api.Models;
 using System.Text.Json;
+
+using FormFeeder.Api.Models;
 
 namespace FormFeeder.Api.Services;
 
@@ -16,7 +17,7 @@ public sealed class EmailTemplateService : IEmailTemplateService
     {
         var html = GenerateHtmlContent(submission);
         var text = GenerateTextContent(submission);
-        
+
         return new EmailContent(html, text);
     }
 
@@ -97,9 +98,11 @@ public sealed class EmailTemplateService : IEmailTemplateService
     private static string GenerateFormDataHtml(JsonDocument? formData)
     {
         if (formData is null)
+        {
             return "<p>No form data submitted</p>";
+        }
 
-        var html = "";
+        var html = string.Empty;
         foreach (var property in formData.RootElement.EnumerateObject())
         {
             html += $@"
@@ -108,7 +111,7 @@ public sealed class EmailTemplateService : IEmailTemplateService
                     <span class='value'>{property.Value}</span>
                 </div>";
         }
-        
+
         return string.IsNullOrEmpty(html) ? "<p>No form data submitted</p>" : html;
     }
 
@@ -126,21 +129,23 @@ Submission Details:
 
 Form Data:
 {GenerateFormDataText(submission.FormData)}";
-        
+
         return text;
     }
 
     private static string GenerateFormDataText(JsonDocument? formData)
     {
         if (formData is null)
+        {
             return "No form data submitted";
+        }
 
-        var text = "";
+        var text = string.Empty;
         foreach (var property in formData.RootElement.EnumerateObject())
         {
             text += $"- {property.Name}: {property.Value}\n";
         }
-        
+
         return string.IsNullOrEmpty(text) ? "No form data submitted" : text;
     }
 }

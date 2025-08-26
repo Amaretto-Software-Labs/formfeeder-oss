@@ -1,16 +1,15 @@
 using FormFeeder.Api.Services;
 using FormFeeder.Api.Tests.Infrastructure;
-using System.Text.Json;
 
 namespace FormFeeder.Api.Tests.Services;
 
 public class EmailTemplateServiceTests
 {
-    private readonly EmailTemplateService _service;
+    private readonly EmailTemplateService service;
 
     public EmailTemplateServiceTests()
     {
-        _service = new EmailTemplateService();
+        service = new EmailTemplateService();
     }
 
     public class GenerateEmailContent : EmailTemplateServiceTests
@@ -23,7 +22,7 @@ public class EmailTemplateServiceTests
             {
                 ["name"] = "John Doe",
                 ["email"] = "john@example.com",
-                ["message"] = "This is a test message"
+                ["message"] = "This is a test message",
             };
             var submission = TestDataBuilder.CreateFormSubmission(
                 formId: "contact-form",
@@ -34,7 +33,7 @@ public class EmailTemplateServiceTests
                 referer: "https://example.com/contact");
 
             // Act
-            var result = _service.GenerateEmailContent(submission);
+            var result = service.GenerateEmailContent(submission);
 
             // Assert
             result.Should().NotBeNull();
@@ -72,7 +71,7 @@ public class EmailTemplateServiceTests
                 referer: null);
 
             // Act
-            var result = _service.GenerateEmailContent(submission);
+            var result = service.GenerateEmailContent(submission);
 
             // Assert
             result.Html.Should().Contain("Unknown")
@@ -89,7 +88,7 @@ public class EmailTemplateServiceTests
             var submission = TestDataBuilder.CreateFormSubmission(formData: emptyData);
 
             // Act
-            var result = _service.GenerateEmailContent(submission);
+            var result = service.GenerateEmailContent(submission);
 
             // Assert
             result.Html.Should().Contain("No form data submitted");
@@ -105,16 +104,16 @@ public class EmailTemplateServiceTests
                 ["user"] = new Dictionary<string, object>
                 {
                     ["name"] = "Jane Smith",
-                    ["age"] = 25
+                    ["age"] = 25,
                 },
                 ["preferences"] = new List<string> { "coffee", "tea" },
                 ["active"] = true,
-                ["score"] = 95.5
+                ["score"] = 95.5,
             };
             var submission = TestDataBuilder.CreateFormSubmission(formData: complexData);
 
             // Act
-            var result = _service.GenerateEmailContent(submission);
+            var result = service.GenerateEmailContent(submission);
 
             // Assert
             // The JsonElement.ToString() will serialize the complex objects
@@ -131,17 +130,17 @@ public class EmailTemplateServiceTests
                 ["unicode"] = "🚀 Hello 世界",
                 ["html"] = "<script>alert('test')</script>",
                 ["quotes"] = "He said \"Hello\" and she said 'Hi'",
-                ["newlines"] = "Line 1\nLine 2"
+                ["newlines"] = "Line 1\nLine 2",
             };
             var submission = TestDataBuilder.CreateFormSubmission(formData: specialData);
 
             // Act
-            var result = _service.GenerateEmailContent(submission);
+            var result = service.GenerateEmailContent(submission);
 
             // Assert
             result.Html.Should().Contain("🚀 Hello 世界");
             result.Text.Should().Contain("🚀 Hello 世界");
-            
+
             // HTML should contain the script tags as text (not executed)
             result.Html.Should().Contain("<script>alert('test')</script>");
         }
@@ -153,7 +152,7 @@ public class EmailTemplateServiceTests
             var submission = TestDataBuilder.CreateFormSubmission();
 
             // Act
-            var result = _service.GenerateEmailContent(submission);
+            var result = service.GenerateEmailContent(submission);
 
             // Assert
             result.Html.Should().StartWith("<!DOCTYPE html>")
@@ -173,7 +172,7 @@ public class EmailTemplateServiceTests
             var submission = TestDataBuilder.CreateFormSubmission();
 
             // Act
-            var result = _service.GenerateEmailContent(submission);
+            var result = service.GenerateEmailContent(submission);
 
             // Assert
             result.Html.Should().Contain("font-family: Arial")
@@ -194,7 +193,7 @@ public class EmailTemplateServiceTests
             var submission = TestDataBuilder.CreateFormSubmission(formId: longFormId);
 
             // Act
-            var result = _service.GenerateEmailContent(submission);
+            var result = service.GenerateEmailContent(submission);
 
             // Assert
             result.Html.Should().Contain(longFormId);
@@ -210,7 +209,7 @@ public class EmailTemplateServiceTests
             var submission = TestDataBuilder.CreateFormSubmission(formId: formId);
 
             // Act
-            var result = _service.GenerateEmailContent(submission);
+            var result = service.GenerateEmailContent(submission);
 
             // Assert
             result.Html.Should().NotBeNullOrEmpty();

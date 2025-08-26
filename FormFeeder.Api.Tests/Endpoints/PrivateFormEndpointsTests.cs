@@ -1,25 +1,24 @@
 using System.Net;
 using System.Text;
 using System.Text.Json;
+
 using FormFeeder.Api.Endpoints;
 using FormFeeder.Api.Models;
 using FormFeeder.Api.Services;
 using FormFeeder.Api.Tests.Infrastructure;
-using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.DependencyInjection;
-using Moq;
 
 namespace FormFeeder.Api.Tests.Endpoints;
 
 public sealed class PrivateFormEndpointsTests : IClassFixture<TestWebApplicationFactory<Program>>
 {
-    private readonly TestWebApplicationFactory<Program> _factory;
-    private readonly HttpClient _client;
+    private readonly TestWebApplicationFactory<Program> factory;
+    private readonly HttpClient client;
 
     public PrivateFormEndpointsTests(TestWebApplicationFactory<Program> factory)
     {
-        _factory = factory;
-        _client = _factory.CreateClient();
+        this.factory = factory;
+        client = this.factory.CreateClient();
     }
 
     [Fact]
@@ -28,8 +27,8 @@ public sealed class PrivateFormEndpointsTests : IClassFixture<TestWebApplication
         // Arrange
         var email = "test@example.com";
         var expectedFormId = "prv-test123";
-        
-        var factory = _factory.WithWebHostBuilder(builder =>
+
+        var factory = this.factory.WithWebHostBuilder(builder =>
         {
             builder.ConfigureServices(services =>
             {
@@ -39,9 +38,9 @@ public sealed class PrivateFormEndpointsTests : IClassFixture<TestWebApplication
                     FormId = expectedFormId,
                     PrivacyMode = true,
                     AllowedDomains = ["*"],
-                    Enabled = true
+                    Enabled = true,
                 };
-                
+
                 mockFormGenService
                     .Setup(x => x.GeneratePrivateFormAsync(email))
                     .ReturnsAsync(mockFormConfig);
@@ -65,13 +64,13 @@ public sealed class PrivateFormEndpointsTests : IClassFixture<TestWebApplication
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.OK);
-        
+
         var responseContent = await response.Content.ReadAsStringAsync();
-        var result = JsonSerializer.Deserialize<CreatePrivateFormResponse>(responseContent, new JsonSerializerOptions 
-        { 
-            PropertyNameCaseInsensitive = true 
+        var result = JsonSerializer.Deserialize<CreatePrivateFormResponse>(responseContent, new JsonSerializerOptions
+        {
+            PropertyNameCaseInsensitive = true,
         });
-        
+
         result.Should().NotBeNull();
         result!.FormId.Should().Be(expectedFormId);
     }
@@ -82,8 +81,8 @@ public sealed class PrivateFormEndpointsTests : IClassFixture<TestWebApplication
         // Arrange
         var email = "test@example.com";
         var expectedFormId = "prv-test123";
-        
-        var factory = _factory.WithWebHostBuilder(builder =>
+
+        var factory = this.factory.WithWebHostBuilder(builder =>
         {
             builder.ConfigureServices(services =>
             {
@@ -93,9 +92,9 @@ public sealed class PrivateFormEndpointsTests : IClassFixture<TestWebApplication
                     FormId = expectedFormId,
                     PrivacyMode = true,
                     AllowedDomains = ["*"],
-                    Enabled = true
+                    Enabled = true,
                 };
-                
+
                 mockFormGenService
                     .Setup(x => x.GeneratePrivateFormAsync(email))
                     .ReturnsAsync(mockFormConfig);
@@ -113,7 +112,7 @@ public sealed class PrivateFormEndpointsTests : IClassFixture<TestWebApplication
         var client = factory.CreateClient();
         var formData = new List<KeyValuePair<string, string>>
         {
-            new("email", email)
+            new("email", email),
         };
         var httpContent = new FormUrlEncodedContent(formData);
 
@@ -122,13 +121,13 @@ public sealed class PrivateFormEndpointsTests : IClassFixture<TestWebApplication
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.OK);
-        
+
         var responseContent = await response.Content.ReadAsStringAsync();
-        var result = JsonSerializer.Deserialize<CreatePrivateFormResponse>(responseContent, new JsonSerializerOptions 
-        { 
-            PropertyNameCaseInsensitive = true 
+        var result = JsonSerializer.Deserialize<CreatePrivateFormResponse>(responseContent, new JsonSerializerOptions
+        {
+            PropertyNameCaseInsensitive = true,
         });
-        
+
         result.Should().NotBeNull();
         result!.FormId.Should().Be(expectedFormId);
     }
@@ -146,7 +145,7 @@ public sealed class PrivateFormEndpointsTests : IClassFixture<TestWebApplication
         var httpContent = new StringContent(jsonContent, Encoding.UTF8, "application/json");
 
         // Act
-        var response = await _client.PostAsync("/v1/forms/from-email", httpContent);
+        var response = await client.PostAsync("/v1/forms/from-email", httpContent);
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
@@ -160,7 +159,7 @@ public sealed class PrivateFormEndpointsTests : IClassFixture<TestWebApplication
         var httpContent = new StringContent(jsonContent, Encoding.UTF8, "application/json");
 
         // Act
-        var response = await _client.PostAsync("/v1/forms/from-email", httpContent);
+        var response = await client.PostAsync("/v1/forms/from-email", httpContent);
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
@@ -170,10 +169,10 @@ public sealed class PrivateFormEndpointsTests : IClassFixture<TestWebApplication
     public async Task CreatePrivateFormFromEmail_WithEmptyBody_ReturnsBadRequest()
     {
         // Arrange
-        var httpContent = new StringContent("", Encoding.UTF8, "application/json");
+        var httpContent = new StringContent(string.Empty, Encoding.UTF8, "application/json");
 
         // Act
-        var response = await _client.PostAsync("/v1/forms/from-email", httpContent);
+        var response = await client.PostAsync("/v1/forms/from-email", httpContent);
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
@@ -186,7 +185,7 @@ public sealed class PrivateFormEndpointsTests : IClassFixture<TestWebApplication
         var httpContent = new StringContent("{invalid json", Encoding.UTF8, "application/json");
 
         // Act
-        var response = await _client.PostAsync("/v1/forms/from-email", httpContent);
+        var response = await client.PostAsync("/v1/forms/from-email", httpContent);
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
@@ -199,7 +198,7 @@ public sealed class PrivateFormEndpointsTests : IClassFixture<TestWebApplication
         var httpContent = new StringContent("email=test@example.com", Encoding.UTF8, "text/plain");
 
         // Act
-        var response = await _client.PostAsync("/v1/forms/from-email", httpContent);
+        var response = await client.PostAsync("/v1/forms/from-email", httpContent);
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.BadRequest);

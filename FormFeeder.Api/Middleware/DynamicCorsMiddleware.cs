@@ -7,13 +7,13 @@ public sealed class DynamicCorsMiddleware(RequestDelegate next, IConfiguration c
     public async Task InvokeAsync(HttpContext context)
     {
         var origin = context.Request.Headers.Origin.FirstOrDefault();
-        
+
         if (!string.IsNullOrEmpty(origin))
         {
             var isAllowed = false;
-            
+
             // Check if this is a form submission endpoint (e.g., /v1/form/{formId})
-            if (context.Request.Path.StartsWithSegments("/v1/form") && 
+            if (context.Request.Path.StartsWithSegments("/v1/form") &&
                 context.Request.Path.Value?.StartsWith("/v1/form/") == true)
             {
                 // Extract form ID from path
@@ -21,11 +21,11 @@ public sealed class DynamicCorsMiddleware(RequestDelegate next, IConfiguration c
                 if (pathSegments.Length >= 3)
                 {
                     var formId = pathSegments[2];
-                    
+
                     // Create a scope to resolve scoped services
                     using var scope = context.RequestServices.CreateScope();
                     var formConfigService = scope.ServiceProvider.GetRequiredService<IFormConfigurationService>();
-                    
+
                     // Get form configuration to check its allowed domains
                     var formConfig = await formConfigService.GetFormConfigurationAsync(formId).ConfigureAwait(false);
                     if (formConfig != null && formConfig.Enabled)
@@ -40,7 +40,7 @@ public sealed class DynamicCorsMiddleware(RequestDelegate next, IConfiguration c
                 var allowedOrigins = configuration.GetSection("AllowedOrigins").Get<List<string>>() ?? [];
                 isAllowed = allowedOrigins.Contains("*") || allowedOrigins.Contains(origin);
             }
-            
+
             if (isAllowed)
             {
                 context.Response.Headers.Append("Access-Control-Allow-Origin", origin);
@@ -49,7 +49,7 @@ public sealed class DynamicCorsMiddleware(RequestDelegate next, IConfiguration c
                 context.Response.Headers.Append("Access-Control-Allow-Headers", "Content-Type, Authorization");
             }
         }
-        
+
         // Handle preflight requests
         if (context.Request.Method == "OPTIONS")
         {

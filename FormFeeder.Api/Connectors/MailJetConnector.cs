@@ -1,9 +1,9 @@
 using FormFeeder.Api.Models;
 using FormFeeder.Api.Services;
+
 using Mailjet.Client;
 using Mailjet.Client.TransactionalEmails;
 using Mailjet.Client.TransactionalEmails.Response;
-using Polly;
 
 namespace FormFeeder.Api.Connectors;
 
@@ -17,7 +17,9 @@ public sealed class MailJetConnector(
 #pragma warning restore CS9113
 {
     public string Type => "MailJet";
+
     public string Name { get; private set; } = name ?? "MailJet";
+
     public bool Enabled { get; set; } = true;
 
     public async Task<ConnectorResult> ExecuteAsync(FormSubmission submission, Dictionary<string, object>? configuration = null)
@@ -31,11 +33,12 @@ public sealed class MailJetConnector(
             }
 
             var emailSettings = ExtractEmailSettings(configuration!, submission);
-            
+
             // Debug logging to see what values we're using
-            logger.LogDebug("MailJet Settings - FromEmail: {FromEmail}, ToEmail: {ToEmail}, TemplateId: {TemplateId}, ApiKey: {ApiKey}", 
+            logger.LogDebug(
+                "MailJet Settings - FromEmail: {FromEmail}, ToEmail: {ToEmail}, TemplateId: {TemplateId}, ApiKey: {ApiKey}",
                 emailSettings.FromEmail, emailSettings.ToEmail, emailSettings.TemplateId, emailSettings.ApiKey?.Substring(0, Math.Min(5, emailSettings.ApiKey.Length)) + "...");
-            
+
             var client = new MailjetClient(emailSettings.ApiKey, emailSettings.ApiSecret);
             var retryPolicy = retryPolicyFactory.CreateMailJetRetryPolicy();
 
@@ -43,18 +46,18 @@ public sealed class MailJetConnector(
             if (!string.IsNullOrEmpty(emailSettings.TemplateId))
             {
                 var email = BuildTemplateEmail(emailSettings, submission);
-                result = await retryPolicy.ExecuteAsync(async _ => 
+                result = await retryPolicy.ExecuteAsync(async _ =>
                     await client.SendTransactionalEmailAsync(email).ConfigureAwait(false));
             }
             else
             {
                 var emailContent = emailTemplateService.GenerateEmailContent(submission);
                 var email = BuildContentEmail(emailSettings, emailContent);
-                result = await retryPolicy.ExecuteAsync(async _ => 
+                result = await retryPolicy.ExecuteAsync(async _ =>
                     await client.SendTransactionalEmailAsync(email).ConfigureAwait(false));
             }
 
-            return ProcessTransactionalResponse(result, submission.FormId ?? "", emailSettings.ToEmail);
+            return ProcessTransactionalResponse(result, submission.FormId ?? string.Empty, emailSettings.ToEmail);
         }
         catch (Exception ex)
         {
@@ -92,21 +95,21 @@ public sealed class MailJetConnector(
     {
         return new EmailSettings
         {
-            ApiKey = configuration.GetValueOrDefault("ApiKey")?.ToString() ?? "",
-            ApiSecret = configuration.GetValueOrDefault("ApiSecret")?.ToString() ?? "",
-            FromEmail = configuration.GetValueOrDefault("FromEmail")?.ToString() ?? "",
+            ApiKey = configuration.GetValueOrDefault("ApiKey")?.ToString() ?? string.Empty,
+            ApiSecret = configuration.GetValueOrDefault("ApiSecret")?.ToString() ?? string.Empty,
+            FromEmail = configuration.GetValueOrDefault("FromEmail")?.ToString() ?? string.Empty,
             FromName = configuration.GetValueOrDefault("FromName")?.ToString() ?? "FormFeeder",
-            ToEmail = configuration.GetValueOrDefault("ToEmail")?.ToString() ?? "",
+            ToEmail = configuration.GetValueOrDefault("ToEmail")?.ToString() ?? string.Empty,
             ToName = configuration.GetValueOrDefault("ToName")?.ToString() ?? "Admin",
             Subject = configuration.GetValueOrDefault("Subject")?.ToString() ?? $"New form submission: {submission.FormId}",
-            TemplateId = configuration.GetValueOrDefault("TemplateId")?.ToString()
+            TemplateId = configuration.GetValueOrDefault("TemplateId")?.ToString(),
         };
     }
 
     private static TransactionalEmail BuildTemplateEmail(EmailSettings settings, FormSubmission submission)
     {
         var templateId = int.Parse(settings.TemplateId!);
-        
+
         // Parse form data into individual fields for template iteration
         var formFields = new Dictionary<string, object>();
         if (submission.FormData?.RootElement.ValueKind == System.Text.Json.JsonValueKind.Object)
@@ -116,18 +119,18 @@ public sealed class MailJetConnector(
                 formFields[property.Name] = property.Value.ToString();
             }
         }
-        
+
         var variables = new Dictionary<string, object>
         {
-            ["formId"] = submission.FormId ?? "",
+            ["formId"] = submission.FormId ?? string.Empty,
             ["submittedAt"] = submission.SubmittedAt.ToString("yyyy-MM-dd HH:mm:ss"),
             ["ipAddress"] = submission.ClientIp ?? "Unknown",
             ["userAgent"] = submission.UserAgent ?? "Unknown",
             ["referer"] = submission.Referer ?? "Unknown",
             ["formData"] = submission.FormData?.RootElement.ToString() ?? "{}",
-            ["formFields"] = formFields  // Dictionary for template iteration
+            ["formFields"] = formFields, // Dictionary for template iteration
         };
-        
+
         return new TransactionalEmailBuilder()
             .WithFrom(new SendContact(settings.FromEmail, settings.FromName))
             .WithTo(new SendContact(settings.ToEmail, settings.ToName))
@@ -157,26 +160,28 @@ public sealed class MailJetConnector(
         }
 
         var message = response.Messages[0];
-        
+
         if (message.Status != "success")
         {
-            var errors = message.Errors?.Any() == true 
+            var errors = message.Errors?.Any() == true
                 ? string.Join(", ", message.Errors.Select(e => $"{e.ErrorCode}: {e.ErrorMessage}"))
                 : "Unknown error";
-                
-            logger.LogWarning("MailJet response indicates failure for form {FormId}. Status: {Status}. Errors: {Errors}", 
+
+            logger.LogWarning(
+                "MailJet response indicates failure for form {FormId}. Status: {Status}. Errors: {Errors}",
                 formId, message.Status, errors);
             return ConnectorResult.Failed($"Failed to send email via MailJet. Status: {message.Status}. Errors: {errors}");
         }
 
         var metadata = new Dictionary<string, object>
         {
-            ["MessageId"] = message.To?.FirstOrDefault()?.MessageID.ToString() ?? "",
-            ["MessageUUID"] = message.To?.FirstOrDefault()?.MessageUUID?.ToString() ?? "",
-            ["Status"] = message.Status
+            ["MessageId"] = message.To?.FirstOrDefault()?.MessageID.ToString() ?? string.Empty,
+            ["MessageUUID"] = message.To?.FirstOrDefault()?.MessageUUID?.ToString() ?? string.Empty,
+            ["Status"] = message.Status,
         };
-        
-        logger.LogInformation("Email sent successfully for form {FormId} to {ToEmail}. MessageId: {MessageId}", 
+
+        logger.LogInformation(
+            "Email sent successfully for form {FormId} to {ToEmail}. MessageId: {MessageId}",
             formId, toEmail, metadata["MessageId"]);
         return ConnectorResult.Successful($"Email sent to {toEmail}", metadata);
     }
@@ -184,12 +189,19 @@ public sealed class MailJetConnector(
     private record EmailSettings
     {
         public required string ApiKey { get; init; }
+
         public required string ApiSecret { get; init; }
+
         public required string FromEmail { get; init; }
+
         public required string FromName { get; init; }
+
         public required string ToEmail { get; init; }
+
         public required string ToName { get; init; }
+
         public required string Subject { get; init; }
+
         public string? TemplateId { get; init; }
     }
 }

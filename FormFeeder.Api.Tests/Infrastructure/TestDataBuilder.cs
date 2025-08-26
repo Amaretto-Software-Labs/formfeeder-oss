@@ -1,7 +1,8 @@
+using System.Text.Json;
+
+using FormFeeder.Api.Connectors;
 using FormFeeder.Api.Models;
 using FormFeeder.Api.Models.DTOs;
-using FormFeeder.Api.Connectors;
-using System.Text.Json;
 
 namespace FormFeeder.Api.Tests.Infrastructure;
 
@@ -12,14 +13,14 @@ public static class TestDataBuilder
         Dictionary<string, object>? formData = null,
         DateTime? submittedAt = null,
         string? clientIp = "192.168.1.1",
-        string? userAgent = "Mozilla/5.0", 
+        string? userAgent = "Mozilla/5.0",
         string? referer = "https://example.com")
     {
         var data = formData ?? new Dictionary<string, object>
         {
             ["name"] = "John Doe",
             ["email"] = "john@example.com",
-            ["message"] = "Test message"
+            ["message"] = "Test message",
         };
 
         var jsonString = JsonSerializer.Serialize(data);
@@ -33,7 +34,7 @@ public static class TestDataBuilder
             SubmittedAt = submittedAt ?? DateTime.UtcNow,
             ClientIp = clientIp,
             UserAgent = userAgent,
-            Referer = referer
+            Referer = referer,
         };
     }
 
@@ -51,7 +52,7 @@ public static class TestDataBuilder
             Enabled = enabled,
             Description = "Test form configuration",
             RateLimit = rateLimit ?? new RateLimitSettings { RequestsPerWindow = 10, WindowMinutes = 1 },
-            Connectors = connectors
+            Connectors = connectors,
         };
     }
 
@@ -70,9 +71,8 @@ public static class TestDataBuilder
                 ["ApiKey"] = "test-api-key",
                 ["ApiSecret"] = "test-api-secret",
                 ["FromEmail"] = "test@example.com",
-                ["ToEmail"] = "recipient@example.com"
-            }
-        );
+                ["ToEmail"] = "recipient@example.com",
+            });
     }
 
     public static FormSubmissionResponse CreateFormSubmissionResponse(
@@ -89,7 +89,6 @@ public static class TestDataBuilder
             submittedAt ?? DateTime.UtcNow,
             success,
             message ?? "Success",
-            submission ?? CreateFormSubmission()
-        );
+            submission ?? CreateFormSubmission());
     }
 }

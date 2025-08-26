@@ -9,6 +9,8 @@ namespace FormFeeder.Api.Services;
 public interface IFormConfigurationManagementService : IFormConfigurationService
 {
     Task<FormConfiguration> CreateFormConfigurationAsync(FormConfiguration config);
+
     Task<FormConfiguration?> UpdateFormConfigurationAsync(FormConfiguration config);
+
     Task<bool> DeleteFormConfigurationAsync(string formId);
 }

@@ -1,24 +1,25 @@
-using FormFeeder.Api.Data;
+using System.Text.Json;
+
+using FormFeeder.Api.Connectors;
 using FormFeeder.Api.Models;
 using FormFeeder.Api.Services;
 using FormFeeder.Api.Tests.Infrastructure;
+
 using Microsoft.Extensions.Logging;
-using System.Text.Json;
-using FormFeeder.Api.Connectors;
 
 namespace FormFeeder.Api.Tests.Services;
 
 public class FormSubmissionServiceTests : TestBase
 {
-    private readonly FormSubmissionService _service;
-    private readonly Mock<ILogger<FormSubmissionService>> _loggerMock;
-    private readonly Mock<IFormConfigurationService> _formConfigServiceMock;
+    private readonly FormSubmissionService service;
+    private readonly Mock<ILogger<FormSubmissionService>> loggerMock;
+    private readonly Mock<IFormConfigurationService> formConfigServiceMock;
 
     public FormSubmissionServiceTests()
     {
-        _loggerMock = CreateMock<ILogger<FormSubmissionService>>();
-        _formConfigServiceMock = CreateMock<IFormConfigurationService>();
-        _service = new FormSubmissionService(DbContext, _formConfigServiceMock.Object, _loggerMock.Object);
+        loggerMock = CreateMock<ILogger<FormSubmissionService>>();
+        formConfigServiceMock = CreateMock<IFormConfigurationService>();
+        service = new FormSubmissionService(DbContext, formConfigServiceMock.Object, loggerMock.Object);
         EnsureDatabaseCreated();
     }
 
@@ -32,24 +33,24 @@ public class FormSubmissionServiceTests : TestBase
             var formData = new Dictionary<string, object>
             {
                 ["name"] = "John Doe",
-                ["email"] = "john@example.com"
+                ["email"] = "john@example.com",
             };
-            
-            var formConfig = new FormConfiguration 
-            { 
+
+            var formConfig = new FormConfiguration
+            {
                 FormId = formId,
                 PrivacyMode = false,
-                Enabled = true
+                Enabled = true,
             };
-            _formConfigServiceMock.Setup(x => x.GetFormConfigurationAsync(formId))
+            formConfigServiceMock.Setup(x => x.GetFormConfigurationAsync(formId))
                 .ReturnsAsync(formConfig);
 
             // Act
-            var result = await _service.SaveSubmissionAsync(
-                formId, 
-                formData, 
-                "192.168.1.1", 
-                "Mozilla/5.0", 
+            var result = await service.SaveSubmissionAsync(
+                formId,
+                formData,
+                "192.168.1.1",
+                "Mozilla/5.0",
                 "https://example.com",
                 "application/json");
 
@@ -82,36 +83,35 @@ public class FormSubmissionServiceTests : TestBase
                 {
                     ["name"] = "John Doe",
                     ["age"] = 30,
-                    ["preferences"] = new List<string> { "coffee", "tea" }
+                    ["preferences"] = new List<string> { "coffee", "tea" },
                 },
                 ["timestamp"] = DateTime.UtcNow.ToString("O"),
-                ["active"] = true
+                ["active"] = true,
             };
 
-            var formConfig = new FormConfiguration 
-            { 
+            var formConfig = new FormConfiguration
+            {
                 FormId = formId,
                 PrivacyMode = false,
-                Enabled = true
+                Enabled = true,
             };
-            _formConfigServiceMock.Setup(x => x.GetFormConfigurationAsync(formId))
+            formConfigServiceMock.Setup(x => x.GetFormConfigurationAsync(formId))
                 .ReturnsAsync(formConfig);
 
             // Act
-            var result = await _service.SaveSubmissionAsync(formId, formData, null, null, null, null);
+            var result = await service.SaveSubmissionAsync(formId, formData, null, null, null, null);
 
             // Assert
             result.IsSuccess.Should().BeTrue();
-            
+
             // Verify JSON structure is preserved
             var savedSubmission = await DbContext.FormSubmissions.FindAsync(result.Value!.Id);
             var formDataJson = savedSubmission!.FormData.RootElement;
-            
+
             formDataJson.GetProperty("user").GetProperty("name").GetString().Should().Be("John Doe");
             formDataJson.GetProperty("user").GetProperty("age").GetInt32().Should().Be(30);
             formDataJson.GetProperty("active").GetBoolean().Should().BeTrue();
         }
-
 
         [Fact]
         public async Task SaveSubmissionAsync_WithEmptyFormData_ShouldSave()
@@ -119,22 +119,22 @@ public class FormSubmissionServiceTests : TestBase
             // Arrange
             const string formId = "empty-form";
             var formData = new Dictionary<string, object>();
-            
-            var formConfig = new FormConfiguration 
-            { 
+
+            var formConfig = new FormConfiguration
+            {
                 FormId = formId,
                 PrivacyMode = false,
-                Enabled = true
+                Enabled = true,
             };
-            _formConfigServiceMock.Setup(x => x.GetFormConfigurationAsync(formId))
+            formConfigServiceMock.Setup(x => x.GetFormConfigurationAsync(formId))
                 .ReturnsAsync(formConfig);
 
             // Act
-            var result = await _service.SaveSubmissionAsync(formId, formData, null, null, null, null);
+            var result = await service.SaveSubmissionAsync(formId, formData, null, null, null, null);
 
             // Assert
             result.IsSuccess.Should().BeTrue();
-            
+
             var savedSubmission = await DbContext.FormSubmissions.FindAsync(result.Value!.Id);
             var formDataJson = savedSubmission!.FormData.RootElement;
             formDataJson.ValueKind.Should().Be(JsonValueKind.Object);
@@ -147,28 +147,28 @@ public class FormSubmissionServiceTests : TestBase
             // Arrange
             const string formId = "test-form";
             var formData = new Dictionary<string, object> { ["test"] = "value" };
-            
-            var formConfig = new FormConfiguration 
-            { 
+
+            var formConfig = new FormConfiguration
+            {
                 FormId = formId,
                 PrivacyMode = false,
-                Enabled = true
+                Enabled = true,
             };
-            _formConfigServiceMock.Setup(x => x.GetFormConfigurationAsync(formId))
+            formConfigServiceMock.Setup(x => x.GetFormConfigurationAsync(formId))
                 .ReturnsAsync(formConfig);
 
             // Act
-            var result = await _service.SaveSubmissionAsync(
-                formId, 
-                formData, 
-                clientIp: null, 
-                userAgent: null, 
-                referer: null, 
+            var result = await service.SaveSubmissionAsync(
+                formId,
+                formData,
+                clientIp: null,
+                userAgent: null,
+                referer: null,
                 contentType: null);
 
             // Assert
             result.IsSuccess.Should().BeTrue();
-            
+
             var savedSubmission = await DbContext.FormSubmissions.FindAsync(result.Value!.Id);
             savedSubmission!.ClientIp.Should().BeNull();
             savedSubmission.UserAgent.Should().BeNull();
@@ -186,27 +186,27 @@ public class FormSubmissionServiceTests : TestBase
                 ["unicode"] = "🚀 Hello 世界",
                 ["special_chars"] = "<script>alert('xss')</script>",
                 ["quotes"] = "He said \"Hello\" and she said 'Hi'",
-                ["newlines"] = "Line 1\nLine 2\r\nLine 3"
+                ["newlines"] = "Line 1\nLine 2\r\nLine 3",
             };
-            
-            var formConfig = new FormConfiguration 
-            { 
+
+            var formConfig = new FormConfiguration
+            {
                 FormId = formId,
                 PrivacyMode = false,
-                Enabled = true
+                Enabled = true,
             };
-            _formConfigServiceMock.Setup(x => x.GetFormConfigurationAsync(formId))
+            formConfigServiceMock.Setup(x => x.GetFormConfigurationAsync(formId))
                 .ReturnsAsync(formConfig);
 
             // Act
-            var result = await _service.SaveSubmissionAsync(formId, formData, null, null, null, null);
+            var result = await service.SaveSubmissionAsync(formId, formData, null, null, null, null);
 
             // Assert
             result.IsSuccess.Should().BeTrue();
-            
+
             var savedSubmission = await DbContext.FormSubmissions.FindAsync(result.Value!.Id);
             var formDataJson = savedSubmission!.FormData.RootElement;
-            
+
             formDataJson.GetProperty("unicode").GetString().Should().Be("🚀 Hello 世界");
             formDataJson.GetProperty("special_chars").GetString().Should().Be("<script>alert('xss')</script>");
         }
@@ -218,24 +218,24 @@ public class FormSubmissionServiceTests : TestBase
             var before = DateTime.UtcNow.AddSeconds(-1);
             const string formId = "time-test";
             var formData = new Dictionary<string, object> { ["test"] = "value" };
-            
-            var formConfig = new FormConfiguration 
-            { 
+
+            var formConfig = new FormConfiguration
+            {
                 FormId = formId,
                 PrivacyMode = false,
-                Enabled = true
+                Enabled = true,
             };
-            _formConfigServiceMock.Setup(x => x.GetFormConfigurationAsync(formId))
+            formConfigServiceMock.Setup(x => x.GetFormConfigurationAsync(formId))
                 .ReturnsAsync(formConfig);
 
             // Act
-            var result = await _service.SaveSubmissionAsync(formId, formData, null, null, null, null);
+            var result = await service.SaveSubmissionAsync(formId, formData, null, null, null, null);
             var after = DateTime.UtcNow.AddSeconds(1);
 
             // Assert
             result.IsSuccess.Should().BeTrue();
             result.Value!.SubmittedAt.Should().BeAfter(before).And.BeBefore(after);
-            
+
             var savedSubmission = await DbContext.FormSubmissions.FindAsync(result.Value.Id);
             savedSubmission!.SubmittedAt.Should().BeAfter(before).And.BeBefore(after);
         }
@@ -246,26 +246,25 @@ public class FormSubmissionServiceTests : TestBase
             // Arrange
             const string formId = "unique-test";
             var formData = new Dictionary<string, object> { ["test"] = "value" };
-            
-            var formConfig = new FormConfiguration 
-            { 
+
+            var formConfig = new FormConfiguration
+            {
                 FormId = formId,
                 PrivacyMode = false,
-                Enabled = true
+                Enabled = true,
             };
-            _formConfigServiceMock.Setup(x => x.GetFormConfigurationAsync(formId))
+            formConfigServiceMock.Setup(x => x.GetFormConfigurationAsync(formId))
                 .ReturnsAsync(formConfig);
 
             // Act
-            var result1 = await _service.SaveSubmissionAsync(formId, formData, null, null, null, null);
-            var result2 = await _service.SaveSubmissionAsync(formId, formData, null, null, null, null);
+            var result1 = await service.SaveSubmissionAsync(formId, formData, null, null, null, null);
+            var result2 = await service.SaveSubmissionAsync(formId, formData, null, null, null, null);
 
             // Assert
             result1.IsSuccess.Should().BeTrue();
             result2.IsSuccess.Should().BeTrue();
             result1.Value!.Id.Should().NotBe(result2.Value!.Id);
         }
-
     }
 
     public class PrivacyMode : FormSubmissionServiceTests
@@ -278,28 +277,28 @@ public class FormSubmissionServiceTests : TestBase
             var formData = new Dictionary<string, object>
             {
                 ["name"] = "John Doe",
-                ["email"] = "john@example.com"
+                ["email"] = "john@example.com",
             };
 
-            var formConfig = new FormConfiguration 
-            { 
+            var formConfig = new FormConfiguration
+            {
                 FormId = formId,
                 PrivacyMode = true,
                 Enabled = true,
                 Connectors = new List<ConnectorConfiguration>
                 {
                     new("mailjet", "test", true, new Dictionary<string, object>())
-                }
+                },
             };
-            _formConfigServiceMock.Setup(x => x.GetFormConfigurationAsync(formId))
+            formConfigServiceMock.Setup(x => x.GetFormConfigurationAsync(formId))
                 .ReturnsAsync(formConfig);
 
             // Act
-            var result = await _service.SaveSubmissionAsync(
-                formId, 
-                formData, 
-                "192.168.1.1", 
-                "Mozilla/5.0", 
+            var result = await service.SaveSubmissionAsync(
+                formId,
+                formData,
+                "192.168.1.1",
+                "Mozilla/5.0",
                 "https://example.com",
                 "application/json");
 
@@ -324,24 +323,24 @@ public class FormSubmissionServiceTests : TestBase
             var formData = new Dictionary<string, object>
             {
                 ["name"] = "Jane Doe",
-                ["email"] = "jane@example.com"
+                ["email"] = "jane@example.com",
             };
 
-            var formConfig = new FormConfiguration 
-            { 
+            var formConfig = new FormConfiguration
+            {
                 FormId = formId,
                 PrivacyMode = false,
-                Enabled = true
+                Enabled = true,
             };
-            _formConfigServiceMock.Setup(x => x.GetFormConfigurationAsync(formId))
+            formConfigServiceMock.Setup(x => x.GetFormConfigurationAsync(formId))
                 .ReturnsAsync(formConfig);
 
             // Act
-            var result = await _service.SaveSubmissionAsync(
-                formId, 
-                formData, 
-                "192.168.1.1", 
-                "Mozilla/5.0", 
+            var result = await service.SaveSubmissionAsync(
+                formId,
+                formData,
+                "192.168.1.1",
+                "Mozilla/5.0",
                 "https://example.com",
                 "application/json");
 
@@ -365,18 +364,18 @@ public class FormSubmissionServiceTests : TestBase
             var formData = new Dictionary<string, object>
             {
                 ["name"] = "Test User",
-                ["email"] = "test@example.com"
+                ["email"] = "test@example.com",
             };
 
-            _formConfigServiceMock.Setup(x => x.GetFormConfigurationAsync(formId))
+            formConfigServiceMock.Setup(x => x.GetFormConfigurationAsync(formId))
                 .ReturnsAsync((FormConfiguration?)null);
 
             // Act
-            var result = await _service.SaveSubmissionAsync(
-                formId, 
-                formData, 
-                "192.168.1.1", 
-                "Mozilla/5.0", 
+            var result = await service.SaveSubmissionAsync(
+                formId,
+                formData,
+                "192.168.1.1",
+                "Mozilla/5.0",
                 "https://example.com",
                 "application/json");
 
@@ -397,24 +396,24 @@ public class FormSubmissionServiceTests : TestBase
             var formData = new Dictionary<string, object>
             {
                 ["message"] = "This should not be saved",
-                ["email"] = "test@example.com"
+                ["email"] = "test@example.com",
             };
 
-            var formConfig = new FormConfiguration 
-            { 
+            var formConfig = new FormConfiguration
+            {
                 FormId = formId,
                 PrivacyMode = false,
-                Enabled = false  // Form is disabled
+                Enabled = false, // Form is disabled
             };
-            _formConfigServiceMock.Setup(x => x.GetFormConfigurationAsync(formId))
+            formConfigServiceMock.Setup(x => x.GetFormConfigurationAsync(formId))
                 .ReturnsAsync(formConfig);
 
             // Act
-            var result = await _service.SaveSubmissionAsync(
-                formId, 
-                formData, 
-                "192.168.1.1", 
-                "Mozilla/5.0", 
+            var result = await service.SaveSubmissionAsync(
+                formId,
+                formData,
+                "192.168.1.1",
+                "Mozilla/5.0",
                 "https://example.com",
                 "application/json");
 
@@ -435,25 +434,25 @@ public class FormSubmissionServiceTests : TestBase
             var formData = new Dictionary<string, object>
             {
                 ["message"] = "This should not be saved",
-                ["email"] = "test@example.com"
+                ["email"] = "test@example.com",
             };
 
-            var formConfig = new FormConfiguration 
-            { 
+            var formConfig = new FormConfiguration
+            {
                 FormId = formId,
                 PrivacyMode = true,  // Privacy mode enabled
                 Enabled = true,
-                Connectors = []  // But no connectors configured (invalid)
+                Connectors = [], // But no connectors configured (invalid)
             };
-            _formConfigServiceMock.Setup(x => x.GetFormConfigurationAsync(formId))
+            formConfigServiceMock.Setup(x => x.GetFormConfigurationAsync(formId))
                 .ReturnsAsync(formConfig);
 
             // Act
-            var result = await _service.SaveSubmissionAsync(
-                formId, 
-                formData, 
-                "192.168.1.1", 
-                "Mozilla/5.0", 
+            var result = await service.SaveSubmissionAsync(
+                formId,
+                formData,
+                "192.168.1.1",
+                "Mozilla/5.0",
                 "https://example.com",
                 "application/json");
 
@@ -474,41 +473,41 @@ public class FormSubmissionServiceTests : TestBase
             var formData = new Dictionary<string, object>
             {
                 ["message"] = "This is a privacy mode test",
-                ["priority"] = "high"
+                ["priority"] = "high",
             };
 
-            var formConfig = new FormConfiguration 
-            { 
+            var formConfig = new FormConfiguration
+            {
                 FormId = formId,
                 PrivacyMode = true,
                 Enabled = true,
                 Connectors = new List<ConnectorConfiguration>
                 {
                     new("slack", "test", true, new Dictionary<string, object>())
-                }
+                },
             };
-            _formConfigServiceMock.Setup(x => x.GetFormConfigurationAsync(formId))
+            formConfigServiceMock.Setup(x => x.GetFormConfigurationAsync(formId))
                 .ReturnsAsync(formConfig);
 
             // Act
-            var result = await _service.SaveSubmissionAsync(
-                formId, 
-                formData, 
-                "10.0.0.1", 
-                "Chrome/119.0", 
+            var result = await service.SaveSubmissionAsync(
+                formId,
+                formData,
+                "10.0.0.1",
+                "Chrome/119.0",
                 "https://testsite.com",
                 "multipart/form-data");
 
             // Assert
             result.IsSuccess.Should().BeTrue();
-            
+
             var response = result.Value!;
             response.Success.Should().BeTrue();
             response.FormId.Should().Be(formId);
             response.Message.Should().Be("Form submitted successfully");
             response.Id.Should().NotBe(Guid.Empty);
             response.Submission.Should().NotBeNull();
-            
+
             // Verify the submission object contains the expected data
             var submission = response.Submission!;
             submission.FormId.Should().Be(formId);
@@ -529,26 +528,25 @@ public class FormSubmissionServiceTests : TestBase
             // Arrange
             const string formId = "error-test";
             var formData = new Dictionary<string, object> { ["test"] = "value" };
-            
-            var formConfig = new FormConfiguration 
-            { 
+
+            var formConfig = new FormConfiguration
+            {
                 FormId = formId,
                 PrivacyMode = false,
-                Enabled = true
+                Enabled = true,
             };
-            _formConfigServiceMock.Setup(x => x.GetFormConfigurationAsync(formId))
+            formConfigServiceMock.Setup(x => x.GetFormConfigurationAsync(formId))
                 .ReturnsAsync(formConfig);
-            
+
             DbContext.Dispose(); // Force the context to be disposed to cause an error
 
             // Act
-            var result = await _service.SaveSubmissionAsync(formId, formData, null, null, null, null);
+            var result = await service.SaveSubmissionAsync(formId, formData, null, null, null, null);
 
             // Assert
             result.IsSuccess.Should().BeFalse();
             result.Error.Should().Be("An error occurred while processing your submission");
             result.Exception.Should().NotBeNull();
         }
-
     }
 }

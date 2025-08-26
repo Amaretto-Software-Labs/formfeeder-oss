@@ -1,6 +1,8 @@
 using System.ComponentModel.DataAnnotations;
 using System.Text.Json;
+
 using FormFeeder.Api.Services;
+
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 
@@ -49,11 +51,12 @@ public static class PrivateFormEndpoints
 
             // Generate form configuration
             var formConfig = await formGenerationService.GeneratePrivateFormAsync(email);
-            
+
             // Save the configuration
             var savedConfig = await formConfigManagementService.CreateFormConfigurationAsync(formConfig);
-            
-            logger.LogInformation("Successfully created private form {FormId} for email: {Email}", 
+
+            logger.LogInformation(
+                "Successfully created private form {FormId} for email: {Email}",
                 savedConfig.FormId, email);
 
             return TypedResults.Ok(new CreatePrivateFormResponse(savedConfig.FormId));
@@ -86,6 +89,7 @@ public static class PrivateFormEndpoints
                     email = emailElement.GetString();
                 }
             }
+
             // Handle form data content type
             else if (request.ContentType?.StartsWith("application/x-www-form-urlencoded", StringComparison.OrdinalIgnoreCase) == true)
             {
@@ -130,7 +134,7 @@ public static class PrivateFormEndpoints
 
     private record EmailExtractionResult(bool IsValid, string? Email, Dictionary<string, string[]>? ValidationErrors)
     {
-        public static EmailExtractionResult Valid(string email) => 
+        public static EmailExtractionResult Valid(string email) =>
             new(true, email, null);
 
         public static EmailExtractionResult Invalid(string error) =>

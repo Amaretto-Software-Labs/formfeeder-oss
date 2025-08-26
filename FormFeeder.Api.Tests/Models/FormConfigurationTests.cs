@@ -27,7 +27,7 @@ public class FormConfigurationTests
                 Description = description,
                 Enabled = enabled,
                 RateLimit = rateLimit,
-                Connectors = connectors
+                Connectors = connectors,
             };
 
             // Assert
@@ -69,7 +69,7 @@ public class FormConfigurationTests
                 FormId = "test",
                 Description = null,
                 RateLimit = null,
-                Connectors = null
+                Connectors = null,
             };
 
             // Assert
@@ -101,7 +101,7 @@ public class FormConfigurationTests
             var config = new FormConfiguration
             {
                 FormId = "multi-domain-form",
-                AllowedDomains = domains
+                AllowedDomains = domains,
             };
 
             // Assert
@@ -119,7 +119,7 @@ public class FormConfigurationTests
             var config = new FormConfiguration
             {
                 FormId = "wildcard-form",
-                AllowedDomains = domains
+                AllowedDomains = domains,
             };
 
             // Assert
@@ -133,7 +133,7 @@ public class FormConfigurationTests
             var config = new FormConfiguration
             {
                 FormId = "no-domains-form",
-                AllowedDomains = []
+                AllowedDomains = [],
             };
 
             // Assert
@@ -150,7 +150,7 @@ public class FormConfigurationTests
             var config = new FormConfiguration
             {
                 FormId = "duplicate-domains-form",
-                AllowedDomains = domains
+                AllowedDomains = domains,
             };
 
             // Assert
@@ -168,14 +168,14 @@ public class FormConfigurationTests
             var rateLimit = new RateLimitSettings
             {
                 RequestsPerWindow = 50,
-                WindowMinutes = 5
+                WindowMinutes = 5,
             };
 
             // Act
             var config = new FormConfiguration
             {
                 FormId = "custom-rate-limit-form",
-                RateLimit = rateLimit
+                RateLimit = rateLimit,
             };
 
             // Assert
@@ -191,7 +191,7 @@ public class FormConfigurationTests
             var config = new FormConfiguration
             {
                 FormId = "no-rate-limit-form",
-                RateLimit = null
+                RateLimit = null,
             };
 
             // Assert
@@ -208,14 +208,14 @@ public class FormConfigurationTests
             var connectors = new List<ConnectorConfiguration>
             {
                 TestDataBuilder.CreateConnectorConfiguration("MailJet", "mailjet-primary", true),
-                TestDataBuilder.CreateConnectorConfiguration("MailJet", "mailjet-secondary", false)
+                TestDataBuilder.CreateConnectorConfiguration("MailJet", "mailjet-secondary", false),
             };
 
             // Act
             var config = new FormConfiguration
             {
                 FormId = "multi-connector-form",
-                Connectors = connectors
+                Connectors = connectors,
             };
 
             // Assert
@@ -233,7 +233,7 @@ public class FormConfigurationTests
             var config = new FormConfiguration
             {
                 FormId = "no-connectors-form",
-                Connectors = null
+                Connectors = null,
             };
 
             // Assert
@@ -247,7 +247,7 @@ public class FormConfigurationTests
             var config = new FormConfiguration
             {
                 FormId = "empty-connectors-form",
-                Connectors = []
+                Connectors = [],
             };
 
             // Assert
@@ -323,7 +323,7 @@ public class RateLimitSettingsTests
             var settings = new RateLimitSettings
             {
                 RequestsPerWindow = 100,
-                WindowMinutes = 5
+                WindowMinutes = 5,
             };
 
             // Assert
@@ -342,7 +342,7 @@ public class RateLimitSettingsTests
             var settings = new RateLimitSettings
             {
                 RequestsPerWindow = requests,
-                WindowMinutes = minutes
+                WindowMinutes = minutes,
             };
 
             // Assert
@@ -357,7 +357,7 @@ public class RateLimitSettingsTests
             var settings = new RateLimitSettings
             {
                 RequestsPerWindow = int.MaxValue,
-                WindowMinutes = int.MaxValue
+                WindowMinutes = int.MaxValue,
             };
 
             // Assert
@@ -377,6 +377,7 @@ public class RateLimitSettingsTests
 
             // Assert
             settings1.Should().NotBeSameAs(settings2); // Different instances
+
             // Note: RateLimitSettings is a class, not a record, so no value equality
         }
 

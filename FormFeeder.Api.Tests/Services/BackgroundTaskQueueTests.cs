@@ -1,15 +1,16 @@
-using FormFeeder.Api.Services;
 using System.Collections.Concurrent;
+
+using FormFeeder.Api.Services;
 
 namespace FormFeeder.Api.Tests.Services;
 
 public class BackgroundTaskQueueTests
 {
-    private readonly BackgroundTaskQueue _queue;
+    private readonly BackgroundTaskQueue queue;
 
     public BackgroundTaskQueueTests()
     {
-        _queue = new BackgroundTaskQueue();
+        queue = new BackgroundTaskQueue();
     }
 
     public class QueueBackgroundWorkItemAsync : BackgroundTaskQueueTests
@@ -26,8 +27,8 @@ public class BackgroundTaskQueueTests
             };
 
             // Act
-            await _queue.QueueBackgroundWorkItemAsync(workItem);
-            var dequeuedItem = await _queue.DequeueAsync(CancellationToken.None);
+            await queue.QueueBackgroundWorkItemAsync(workItem);
+            var dequeuedItem = await queue.DequeueAsync(CancellationToken.None);
             await dequeuedItem(CancellationToken.None);
 
             // Assert
@@ -38,7 +39,7 @@ public class BackgroundTaskQueueTests
         public async Task QueueBackgroundWorkItemAsync_WithNullWorkItem_ShouldThrowArgumentNullException()
         {
             // Act & Assert
-            var act = async () => await _queue.QueueBackgroundWorkItemAsync(null!);
+            var act = async () => await queue.QueueBackgroundWorkItemAsync(null!);
             await act.Should().ThrowAsync<ArgumentNullException>();
         }
 
@@ -49,7 +50,7 @@ public class BackgroundTaskQueueTests
             Func<CancellationToken, ValueTask> workItem = _ => ValueTask.CompletedTask;
 
             // Act
-            var task = _queue.QueueBackgroundWorkItemAsync(workItem);
+            var task = queue.QueueBackgroundWorkItemAsync(workItem);
 
             // Assert
             task.IsCompleted.Should().BeTrue();
@@ -70,10 +71,10 @@ public class BackgroundTaskQueueTests
                 return ValueTask.CompletedTask;
             };
 
-            await _queue.QueueBackgroundWorkItemAsync(workItem);
+            await queue.QueueBackgroundWorkItemAsync(workItem);
 
             // Act
-            var dequeuedItem = await _queue.DequeueAsync(CancellationToken.None);
+            var dequeuedItem = await queue.DequeueAsync(CancellationToken.None);
             await dequeuedItem(CancellationToken.None);
 
             // Assert
@@ -85,26 +86,26 @@ public class BackgroundTaskQueueTests
         {
             // Arrange
             var executionOrder = new List<int>();
-            
+
             Func<CancellationToken, ValueTask> workItem1 = _ =>
             {
                 executionOrder.Add(1);
                 return ValueTask.CompletedTask;
             };
-            
+
             Func<CancellationToken, ValueTask> workItem2 = _ =>
             {
                 executionOrder.Add(2);
                 return ValueTask.CompletedTask;
             };
 
-            await _queue.QueueBackgroundWorkItemAsync(workItem1);
-            await _queue.QueueBackgroundWorkItemAsync(workItem2);
+            await queue.QueueBackgroundWorkItemAsync(workItem1);
+            await queue.QueueBackgroundWorkItemAsync(workItem2);
 
             // Act
-            var firstItem = await _queue.DequeueAsync(CancellationToken.None);
-            var secondItem = await _queue.DequeueAsync(CancellationToken.None);
-            
+            var firstItem = await queue.DequeueAsync(CancellationToken.None);
+            var secondItem = await queue.DequeueAsync(CancellationToken.None);
+
             await firstItem(CancellationToken.None);
             await secondItem(CancellationToken.None);
 
@@ -120,7 +121,7 @@ public class BackgroundTaskQueueTests
             cts.Cancel();
 
             // Act & Assert
-            await FluentActions.Invoking(() => _queue.DequeueAsync(cts.Token).AsTask())
+            await FluentActions.Invoking(() => queue.DequeueAsync(cts.Token).AsTask())
                 .Should().ThrowAsync<OperationCanceledException>();
         }
 
@@ -131,7 +132,7 @@ public class BackgroundTaskQueueTests
             using var cts = new CancellationTokenSource(TimeSpan.FromMilliseconds(100));
 
             // Act & Assert
-            await FluentActions.Invoking(() => _queue.DequeueAsync(cts.Token).AsTask())
+            await FluentActions.Invoking(() => queue.DequeueAsync(cts.Token).AsTask())
                 .Should().ThrowAsync<OperationCanceledException>();
         }
 
@@ -147,13 +148,13 @@ public class BackgroundTaskQueueTests
             };
 
             // Start dequeue operation (will wait)
-            var dequeueTask = _queue.DequeueAsync(CancellationToken.None);
+            var dequeueTask = queue.DequeueAsync(CancellationToken.None);
 
             // Queue an item after a short delay
             _ = Task.Run(async () =>
             {
                 await Task.Delay(50);
-                await _queue.QueueBackgroundWorkItemAsync(workItem);
+                await queue.QueueBackgroundWorkItemAsync(workItem);
             });
 
             // Act
@@ -190,9 +191,10 @@ public class BackgroundTaskQueueTests
                         {
                             executedItems.Add(index);
                         }
+
                         return ValueTask.CompletedTask;
                     };
-                    await _queue.QueueBackgroundWorkItemAsync(workItem);
+                    await queue.QueueBackgroundWorkItemAsync(workItem);
                 }));
             }
 
@@ -201,7 +203,7 @@ public class BackgroundTaskQueueTests
             {
                 dequeueTasks.Add(Task.Run(async () =>
                 {
-                    var workItem = await _queue.DequeueAsync(CancellationToken.None);
+                    var workItem = await queue.DequeueAsync(CancellationToken.None);
                     await workItem(CancellationToken.None);
                 }));
             }
@@ -233,7 +235,7 @@ public class BackgroundTaskQueueTests
                     await Task.Delay(10); // Simulate work
                     processedItems.Add(index);
                 };
-                await _queue.QueueBackgroundWorkItemAsync(workItem);
+                await queue.QueueBackgroundWorkItemAsync(workItem);
             }
 
             // Create multiple consumers
@@ -248,7 +250,7 @@ public class BackgroundTaskQueueTests
                         try
                         {
                             using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(5));
-                            var workItem = await _queue.DequeueAsync(cts.Token);
+                            var workItem = await queue.DequeueAsync(cts.Token);
                             await workItem(CancellationToken.None);
                             itemsProcessed++;
                         }

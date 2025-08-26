@@ -3,8 +3,11 @@ namespace FormFeeder.Api.Models;
 public readonly record struct Result<T>
 {
     public bool IsSuccess { get; init; }
+
     public T? Value { get; init; }
+
     public string? Error { get; init; }
+
     public Exception? Exception { get; init; }
 
     private Result(bool isSuccess, T? value, string? error, Exception? exception = null)
@@ -16,9 +19,9 @@ public readonly record struct Result<T>
     }
 
     public static Result<T> Success(T value) => new(true, value, null);
-    
+
     public static Result<T> Failure(string error) => new(false, default, error);
-    
+
     public static Result<T> Failure(string error, Exception exception) => new(false, default, error, exception);
 
     public static implicit operator Result<T>(T value) => Success(value);
@@ -33,8 +36,8 @@ public readonly record struct Result<T>
 public static class Result
 {
     public static Result<T> Success<T>(T value) => Result<T>.Success(value);
-    
+
     public static Result<T> Failure<T>(string error) => Result<T>.Failure(error);
-    
+
     public static Result<T> Failure<T>(string error, Exception exception) => Result<T>.Failure(error, exception);
 }

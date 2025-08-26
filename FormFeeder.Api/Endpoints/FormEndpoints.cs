@@ -1,6 +1,7 @@
 using FormFeeder.Api.Models;
 using FormFeeder.Api.Models.DTOs;
 using FormFeeder.Api.Services;
+
 using Microsoft.AspNetCore.Http.HttpResults;
 
 namespace FormFeeder.Api.Endpoints;
@@ -44,7 +45,9 @@ public static class FormEndpoints
         {
             var validationResult = await ValidateFormSubmission(formId, request, validationService);
             if (validationResult is not null)
+            {
                 return validationResult;
+            }
 
             var submissionResult = await ProcessFormSubmission(
                 formId, request, submissionService, dataExtractionService);
@@ -55,14 +58,14 @@ public static class FormEndpoints
 
             var response = submissionResult.Value!;
             await QueueConnectorExecution(formId, response, formConfigService, connectorService, backgroundTaskQueue, logger);
-            
+
             return TypedResults.Ok(response);
         }
         catch (Exception ex)
         {
             logger.LogError(ex, "Error processing form submission for form {FormId}", formId);
             return TypedResults.BadRequest(new FormSubmissionResponse(
-                Guid.Empty, formId, DateTime.UtcNow, false, 
+                Guid.Empty, formId, DateTime.UtcNow, false,
                 "An error occurred while processing your submission"));
         }
     }
@@ -74,7 +77,9 @@ public static class FormEndpoints
     {
         var validationResult = await validationService.ValidateFormAndOriginAsync(formId, request);
         if (validationResult.IsSuccess)
+        {
             return null;
+        }
 
         var errorMessage = validationResult.Error ?? "Form validation failed";
         return errorMessage switch
@@ -83,7 +88,7 @@ public static class FormEndpoints
                 Guid.Empty, formId, DateTime.UtcNow, false, errorMessage)),
             var error when error.Contains("disabled") => TypedResults.BadRequest(new FormSubmissionResponse(
                 Guid.Empty, formId, DateTime.UtcNow, false, errorMessage)),
-            _ => TypedResults.Unauthorized()
+            _ => TypedResults.Unauthorized(),
         };
     }
 
@@ -120,11 +125,15 @@ public static class FormEndpoints
         ILogger<Program> logger)
     {
         if (response.Submission is null)
+        {
             return;
+        }
 
         var formConfig = await formConfigService.GetFormConfigurationAsync(formId).ConfigureAwait(false);
         if (formConfig?.Connectors is null || formConfig.Connectors.Count == 0)
+        {
             return;
+        }
 
         await backgroundTaskQueue.QueueBackgroundWorkItemAsync(async token =>
         {
@@ -134,7 +143,7 @@ public static class FormEndpoints
                 {
                     logger.LogInformation("Executing connectors for privacy mode form {FormId} - submission not persisted", formId);
                 }
-                
+
                 await connectorService.ExecuteConnectorsAsync(response.Submission, formConfig.Connectors).ConfigureAwait(false);
             }
             catch (Exception ex)
