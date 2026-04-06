@@ -360,3 +360,30 @@ FormFeeder.Api/
 ├── Program.cs                    # Application startup
 └── appsettings.json             # Configuration
 ```
+
+---
+
+## Products Showcase
+
+| Product | Website | Company | Built with | Notes |
+| --- | --- | --- | --- | --- |
+| Aurora | [AuroraHQ.ai](https://aurorahq.ai) | Amaretto Software Labs | Create high-fidelity product prototypes using AI. |
+| Borealis | [BorealisHQ.io](https://borealishq.io) | Amaretto Software Labs | AI Sandboxes and infrastructure on demand. |
+| Cobalt Coder | [cobaltcode.ai](https://cobaltcode.ai) | Amaretto Software Labs | A barebone coding agent CLI built for speed, control, and no limitations. |
+| Dawn | [DawnHQ.ai](https://dawnhq.ai) | Amaretto Software Labs | Team knowledge agent, get instant answers from your codebase, infrastructure, and connected systems — directly in Slack, Teams or Telegram. |
+| Enclave | [EnclaveHQ.io](https://enclavehq.io) | Amaretto Software Labs | Run protected apps in a secure environment via remote browser isolation. |
+| Entity | [EntityHQ.ai](https://entityhq.ai) | Amaretto Software Labs | AI Agent orchestrator for building AI native Companies  |
+| FormFeeder | [FormFeeder.io](https://formfeeder.io) | Amaretto Software Labs | Form handling for static websites with privacy and security by default. A hosted version with a control panel for FormFeeder OSS |
+
+---
+
+## Sponsors & Contributors
+
+<p align="center">
+  <a href="https://vasoftware.co.uk" target="_blank" rel="noopener" style="margin-right:32px;">
+    <img src="docs/assets/VA_Logo_Horizontal_RGBx320.png" alt="VA Software Solutions" width="220" />
+  </a>
+  <a href="https://amarettosoftware.com" target="_blank" rel="noopener">
+    <img src="docs/assets/amaretto-software-labs-logo.png" alt="Amaretto Software Labs" width="220" />
+  </a>
+</p>
