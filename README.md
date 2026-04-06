@@ -365,6 +365,8 @@ FormFeeder.Api/
 
 ## Products Showcase
 
+Below are some products that are built with or actively integrate the [FormFeeder.io](https://formfeeder.io) open source form submission engine. If you want your product listed, make sure that you actually use FormFeeder and submit a PR.
+
 | Product | Website | Company | Built with | Notes |
 | --- | --- | --- | --- | --- |
 | Aurora | [AuroraHQ.ai](https://aurorahq.ai) | Amaretto Software Labs | Create high-fidelity product prototypes using AI. |
